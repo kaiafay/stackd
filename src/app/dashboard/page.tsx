@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useLinks } from "@/hooks/useLinks";
 import LinkList from "@/components/dashboard/LinkList";
 import AppearancePicker from "@/components/dashboard/AppearancePicker";
+import EditProfile from "@/components/dashboard/EditProfile";
 import { useRouter } from "next/navigation";
 
 type Profile = {
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -214,6 +216,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <button
+          onClick={() => setEditingProfile((e) => !e)}
           style={{
             fontSize: "12px",
             color: "var(--muted)",
@@ -223,9 +226,20 @@ export default function DashboardPage() {
             fontFamily: "Metropolis, sans-serif",
           }}
         >
-          Edit →
+          {editingProfile ? "Close" : "Edit →"}
         </button>
       </div>
+
+      {editingProfile && (
+        <EditProfile
+          profile={profile}
+          onSave={(updated) => {
+            setProfile((prev) => (prev ? { ...prev, ...updated } : prev));
+            setEditingProfile(false);
+          }}
+          onCancel={() => setEditingProfile(false)}
+        />
+      )}
 
       {/* Links section */}
       <div style={{ padding: "24px 24px 0" }}>
