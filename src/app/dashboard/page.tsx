@@ -7,16 +7,7 @@ import LinkList from "@/components/dashboard/LinkList";
 import AppearancePicker from "@/components/dashboard/AppearancePicker";
 import EditProfile from "@/components/dashboard/EditProfile";
 import { useRouter } from "next/navigation";
-
-type Profile = {
-  id: string;
-  username: string;
-  display_name: string | null;
-  bio: string | null;
-  theme: string;
-};
-
-type Theme = "light" | "dark" | "color";
+import type { Profile, Theme } from "@/types";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -194,6 +185,11 @@ export default function DashboardPage() {
             height: "52px",
             borderRadius: "50%",
             backgroundColor: "var(--divider)",
+            backgroundImage: profile.avatar_url
+              ? `url(${profile.avatar_url})`
+              : "none",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -203,7 +199,8 @@ export default function DashboardPage() {
             flexShrink: 0,
           }}
         >
-          {(profile.display_name ?? profile.username).charAt(0).toUpperCase()}
+          {!profile.avatar_url &&
+            (profile.display_name ?? profile.username).charAt(0).toUpperCase()}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div

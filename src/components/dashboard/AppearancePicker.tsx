@@ -1,6 +1,6 @@
 "use client";
 
-type Theme = "light" | "dark" | "color";
+import type { Theme } from "@/types";
 
 type Props = {
   current: Theme;
