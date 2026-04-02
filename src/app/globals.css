@@ -1,26 +1,49 @@
-@import "tailwindcss";
+@import "@fontsource/metropolis/400.css";
+@import "@fontsource/metropolis/500.css";
+@import "@fontsource/metropolis/600.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f7f4ef;
+  --text: #1a1714;
+  --divider: #e8e3da;
+  --accent: #8b7355;
+  --muted: #a09880;
+  --surface: #ede8e0;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-theme="dark"] {
+  --bg: #1c1a17;
+  --text: #f0ebe3;
+  --divider: #2e2b27;
+  --accent: #c4b5a0;
+  --muted: #7a7368;
+  --surface: #252320;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+[data-theme="color"] {
+  --bg: #e8e0d5;
+  --text: #1a1714;
+  --divider: #d4cbb8;
+  --accent: #6b7f9e;
+  --muted: #a09880;
+  --surface: #ded5c8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Metropolis", sans-serif;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
 }
