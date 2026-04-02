@@ -1,0 +1,243 @@
+"use client";
+
+import { useState } from "react";
+import { type Link } from "@/hooks/useLinks";
+
+type Props = {
+  link: Link;
+  onUpdate: (
+    id: string,
+    updates: Partial<Pick<Link, "title" | "url" | "enabled">>,
+  ) => void;
+  onDelete: (id: string) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLSpanElement>;
+};
+
+export default function LinkItem({
+  link,
+  onUpdate,
+  onDelete,
+  dragHandleProps,
+}: Props) {
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(link.title);
+  const [url, setUrl] = useState(link.url);
+
+  function handleSave() {
+    onUpdate(link.id, { title, url });
+    setEditing(false);
+  }
+
+  function handleCancel() {
+    setTitle(link.title);
+    setUrl(link.url);
+    setEditing(false);
+  }
+
+  const surface: React.CSSProperties = {
+    backgroundColor: "var(--surface)",
+    borderRadius: "6px",
+    marginBottom: "8px",
+    overflow: "hidden",
+  };
+
+  const rowStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "13px 14px",
+    cursor: "pointer",
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    backgroundColor: "var(--bg)",
+    border: "1px solid var(--divider)",
+    borderRadius: "4px",
+    padding: "9px 12px",
+    fontSize: "13px",
+    fontFamily: "Metropolis, sans-serif",
+    color: "var(--text)",
+    outline: "none",
+  };
+
+  return (
+    <div style={surface}>
+      <div style={rowStyle} onClick={() => setEditing((e) => !e)}>
+        <span
+          {...dragHandleProps}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            color: "var(--muted)",
+            fontSize: "14px",
+            cursor: "grab",
+            flexShrink: 0,
+          }}
+        >
+          ⠿
+        </span>
+        <span
+          style={{
+            flex: 1,
+            fontSize: "14px",
+            fontWeight: 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {link.title}
+        </span>
+        {!editing && (
+          <span
+            style={{
+              fontSize: "11px",
+              color: "var(--muted)",
+              maxWidth: "100px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {link.url.replace("https://", "").replace("http://", "")}
+          </span>
+        )}
+        <span
+          style={{ fontSize: "13px", color: "var(--muted)", flexShrink: 0 }}
+        >
+          ✎
+        </span>
+      </div>
+
+      {editing && (
+        <div
+          style={{
+            padding: "0 14px 14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+          }}
+        >
+          <input
+            style={inputStyle}
+            type="text"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <input
+            style={inputStyle}
+            type="url"
+            placeholder="URL"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginTop: "2px",
+            }}
+          >
+            <label
+              style={{
+                position: "relative",
+                width: "32px",
+                height: "18px",
+                flexShrink: 0,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={link.enabled}
+                onChange={(e) =>
+                  onUpdate(link.id, { enabled: e.target.checked })
+                }
+                style={{ opacity: 0, width: 0, height: 0 }}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  backgroundColor: link.enabled
+                    ? "var(--accent)"
+                    : "var(--divider)",
+                  borderRadius: "18px",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    width: "12px",
+                    height: "12px",
+                    left: link.enabled ? "17px" : "3px",
+                    top: "3px",
+                    backgroundColor: "white",
+                    borderRadius: "50%",
+                    transition: "left 0.2s",
+                  }}
+                />
+              </span>
+            </label>
+            <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+              Visible on profile
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>
+            <button
+              onClick={handleSave}
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                fontFamily: "Metropolis, sans-serif",
+                backgroundColor: "var(--accent)",
+                color: "var(--bg)",
+                border: "none",
+                borderRadius: "4px",
+                padding: "7px 16px",
+                cursor: "pointer",
+              }}
+            >
+              Save
+            </button>
+            <button
+              onClick={handleCancel}
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                fontFamily: "Metropolis, sans-serif",
+                backgroundColor: "none",
+                color: "var(--muted)",
+                border: "1px solid var(--divider)",
+                borderRadius: "4px",
+                padding: "7px 16px",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onDelete(link.id)}
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                fontFamily: "Metropolis, sans-serif",
+                backgroundColor: "transparent",
+                color: "#C0735A",
+                border: "none",
+                padding: "7px 0",
+                cursor: "pointer",
+                marginLeft: "auto",
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
