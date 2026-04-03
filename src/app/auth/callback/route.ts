@@ -9,7 +9,7 @@ function deriveUsername(email: string): string {
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const { searchParams } = requestUrl;
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? requestUrl.origin;
+  const origin = (process.env.NEXT_PUBLIC_SITE_URL ?? requestUrl.origin).replace(/\/$/, "");
   const code = searchParams.get("code");
 
   if (code) {

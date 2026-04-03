@@ -20,19 +20,18 @@ export function useLinks(profileId: string) {
 
   useEffect(() => {
     if (!profileId) return;
+    async function fetchLinks() {
+      setLoading(true);
+      const { data } = await supabase
+        .from("links")
+        .select("*")
+        .eq("profile_id", profileId)
+        .order("order_index");
+      setLinks(data ?? []);
+      setLoading(false);
+    }
     fetchLinks();
   }, [profileId]);
-
-  async function fetchLinks() {
-    setLoading(true);
-    const { data } = await supabase
-      .from("links")
-      .select("*")
-      .eq("profile_id", profileId)
-      .order("order_index");
-    setLinks(data ?? []);
-    setLoading(false);
-  }
 
   async function addLink(title: string, url: string): Promise<{ error: Error | null }> {
     const order_index = links.length;
