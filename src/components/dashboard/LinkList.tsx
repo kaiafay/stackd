@@ -18,7 +18,7 @@ import {
 import { KeyboardSensor } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import LinkItem from "./LinkItem";
-import { type Link } from "@/hooks/useLinks";
+import type { Link } from "@/types";
 
 type Props = {
   links: Link[];

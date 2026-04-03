@@ -2,16 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-export type Link = {
-  id: string;
-  profile_id: string;
-  title: string;
-  url: string;
-  order_index: number;
-  enabled: boolean;
-  click_count: number;
-};
+import type { Link } from "@/types";
 
 function normalizeUrl(url: string): string {
   const trimmed = url.trim();

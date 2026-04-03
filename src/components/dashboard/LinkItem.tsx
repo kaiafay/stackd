@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { type Link } from "@/hooks/useLinks";
+import type { Link } from "@/types";
 
 type Props = {
   link: Link;
