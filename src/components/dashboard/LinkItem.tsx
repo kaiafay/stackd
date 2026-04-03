@@ -198,7 +198,7 @@ export default function LinkItem({
                 fontSize: "12px",
                 fontWeight: 500,
                 fontFamily: "Metropolis, sans-serif",
-                backgroundColor: "none",
+                backgroundColor: "transparent",
                 color: "var(--muted)",
                 border: "1px solid var(--divider)",
                 borderRadius: "4px",
