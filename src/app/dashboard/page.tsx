@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useLinks } from "@/hooks/useLinks";
 import LinkList from "@/components/dashboard/LinkList";
@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const unSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unEmptyWarned = useRef(false);
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const { links, loading, addLink, updateLink, deleteLink, reorderLinks } =
     useLinks(profile?.id ?? "");

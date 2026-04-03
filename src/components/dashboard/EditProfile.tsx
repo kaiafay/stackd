@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types";
 
@@ -25,7 +25,7 @@ export default function EditProfile({ profile, onSave }: Props) {
   const [bioError, setBioError] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   function flashSaved(setter: (v: boolean) => void) {
     setter(true);
