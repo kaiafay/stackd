@@ -13,6 +13,7 @@
   --accent: #8b7355;
   --muted: #a09880;
   --surface: #ede8e0;
+  --error: #C0735A;
 }
 
 [data-theme="dark"] {

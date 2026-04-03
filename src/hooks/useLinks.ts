@@ -1,17 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-export type Link = {
-  id: string;
-  profile_id: string;
-  title: string;
-  url: string;
-  order_index: number;
-  enabled: boolean;
-  click_count: number;
-};
+import type { Link } from "@/types";
 
 function normalizeUrl(url: string): string {
   const trimmed = url.trim();
@@ -24,23 +15,23 @@ function normalizeUrl(url: string): string {
 export function useLinks(profileId: string) {
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   useEffect(() => {
     if (!profileId) return;
+    async function fetchLinks() {
+      setLoading(true);
+      const { data } = await supabase
+        .from("links")
+        .select("*")
+        .eq("profile_id", profileId)
+        .order("order_index");
+      setLinks(data ?? []);
+      setLoading(false);
+    }
     fetchLinks();
   }, [profileId]);
-
-  async function fetchLinks() {
-    setLoading(true);
-    const { data } = await supabase
-      .from("links")
-      .select("*")
-      .eq("profile_id", profileId)
-      .order("order_index");
-    setLinks(data ?? []);
-    setLoading(false);
-  }
 
   async function addLink(title: string, url: string): Promise<{ error: Error | null }> {
     const order_index = links.length;

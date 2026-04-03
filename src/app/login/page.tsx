@@ -18,7 +18,7 @@ function LoginErrorMessage() {
     <p
       style={{
         fontSize: "13px",
-        color: "#C0735A",
+        color: "var(--error)",
         marginTop: "16px",
         lineHeight: 1.5,
       }}
@@ -115,7 +115,7 @@ export default function LoginPage() {
               <p
                 style={{
                   fontSize: "12px",
-                  color: "#C0735A",
+                  color: "var(--error)",
                   marginBottom: "12px",
                 }}
               >

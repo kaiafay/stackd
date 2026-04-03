@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types";
+import { inputStyle, sectionLabelStyle } from "@/styles/shared";
 
 type Props = {
   profile: Profile;
@@ -10,8 +11,8 @@ type Props = {
 };
 
 export default function EditProfile({ profile, onSave }: Props) {
-  const [displayName, setDisplayName] = useState(profile.display_name ?? "");
-  const [bio, setBio] = useState(profile.bio ?? "");
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
 
   const [editingDisplayName, setEditingDisplayName] = useState(false);
@@ -25,7 +26,7 @@ export default function EditProfile({ profile, onSave }: Props) {
   const [bioError, setBioError] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   function flashSaved(setter: (v: boolean) => void) {
     setter(true);
@@ -102,28 +103,7 @@ export default function EditProfile({ profile, onSave }: Props) {
     }
   }
 
-  const labelStyle: React.CSSProperties = {
-    fontSize: "11px",
-    fontWeight: 600,
-    letterSpacing: "0.8px",
-    textTransform: "uppercase",
-    color: "var(--muted)",
-    display: "block",
-    marginBottom: "4px",
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    backgroundColor: "var(--bg)",
-    border: "1px solid var(--divider)",
-    borderRadius: "4px",
-    padding: "9px 12px",
-    fontSize: "13px",
-    fontFamily: "Metropolis, sans-serif",
-    color: "var(--text)",
-    outline: "none",
-    boxSizing: "border-box",
-  };
+  const labelStyle = { ...sectionLabelStyle, display: "block", marginBottom: "4px" } as React.CSSProperties;
 
   const textStyle: React.CSSProperties = {
     fontSize: "13px",
@@ -179,7 +159,7 @@ export default function EditProfile({ profile, onSave }: Props) {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            (displayName || profile.username).charAt(0).toUpperCase()
+            (profile.display_name || profile.username).charAt(0).toUpperCase()
           )}
         </div>
         <div
@@ -256,14 +236,14 @@ export default function EditProfile({ profile, onSave }: Props) {
               placeholder="Your name"
             />
           ) : (
-            <div onClick={() => setEditingDisplayName(true)} style={textStyle}>
-              {displayName || (
+            <div onClick={() => { setEditingDisplayName(true); setDisplayName(profile.display_name ?? ""); }} style={textStyle}>
+              {profile.display_name || (
                 <span style={{ color: "var(--muted)" }}>Your name</span>
               )}
             </div>
           )}
           {dnError && (
-            <p style={{ fontSize: "11px", color: "#C0735A", marginTop: "4px" }}>
+            <p style={{ fontSize: "11px", color: "var(--error)", marginTop: "4px" }}>
               {dnError}
             </p>
           )}
@@ -297,14 +277,14 @@ export default function EditProfile({ profile, onSave }: Props) {
               placeholder="A short bio"
             />
           ) : (
-            <div onClick={() => setEditingBio(true)} style={textStyle}>
-              {bio || (
+            <div onClick={() => { setEditingBio(true); setBio(profile.bio ?? ""); }} style={textStyle}>
+              {profile.bio || (
                 <span style={{ color: "var(--muted)" }}>A short bio</span>
               )}
             </div>
           )}
           {bioError && (
-            <p style={{ fontSize: "11px", color: "#C0735A", marginTop: "4px" }}>
+            <p style={{ fontSize: "11px", color: "var(--error)", marginTop: "4px" }}>
               {bioError}
             </p>
           )}
@@ -312,7 +292,7 @@ export default function EditProfile({ profile, onSave }: Props) {
       </div>
       </div>
       {avatarError && (
-        <p style={{ fontSize: "11px", color: "#C0735A" }}>
+        <p style={{ fontSize: "11px", color: "var(--error)" }}>
           {avatarError}
         </p>
       )}
