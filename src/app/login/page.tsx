@@ -1,9 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+const URL_ERROR_MESSAGES: Record<string, string> = {
+  profile_creation_failed: "We had trouble setting up your account. Please try signing in again.",
+  auth: "Something went wrong signing you in. Please try again.",
+};
+
+function LoginErrorMessage() {
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error");
+  if (!urlError) return null;
+  const message = URL_ERROR_MESSAGES[urlError] ?? "Something went wrong. Please try again.";
+  return (
+    <p
+      style={{
+        fontSize: "13px",
+        color: "#C0735A",
+        marginTop: "16px",
+        lineHeight: 1.5,
+      }}
+    >
+      {message}
+    </p>
+  );
+}
+
 export default function LoginPage() {
+
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -116,6 +142,10 @@ export default function LoginPage() {
             >
               {loading ? "Sending..." : "Send magic link"}
             </button>
+
+            <Suspense fallback={null}>
+              <LoginErrorMessage />
+            </Suspense>
           </>
         ) : (
           <p

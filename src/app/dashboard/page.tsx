@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useLinks } from "@/hooks/useLinks";
 import LinkList from "@/components/dashboard/LinkList";
@@ -15,7 +15,12 @@ export default function DashboardPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [adding, setAdding] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(false);
+  const [username, setUsername] = useState("");
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [unSaved, setUnSaved] = useState(false);
+  const [unError, setUnError] = useState("");
+  const unSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unEmptyWarned = useRef(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -41,6 +46,7 @@ export default function DashboardPage() {
 
       if (data) {
         setProfile(data);
+        setUsername(data.username);
         setTheme((data.theme as Theme) ?? "light");
         document.documentElement.setAttribute(
           "data-theme",
@@ -76,6 +82,37 @@ export default function DashboardPage() {
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.push("/login");
+  }
+
+  async function saveUsername() {
+    if (!username.trim()) {
+      if (unEmptyWarned.current) {
+        // Second blur with empty value — cancel edit and revert
+        setUsername(profile!.username);
+        setUnError("");
+        setEditingUsername(false);
+        unEmptyWarned.current = false;
+      } else {
+        setUnError("username can't be empty");
+        unEmptyWarned.current = true;
+      }
+      return;
+    }
+    setUnError("");
+    unEmptyWarned.current = false;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ username })
+      .eq("id", profile!.id);
+    if (error) {
+      setUnError(error.code === "23505" ? "that username is already taken" : error.message);
+    } else {
+      setEditingUsername(false);
+      setProfile((prev) => (prev ? { ...prev, username } : prev));
+      setUnSaved(true);
+      if (unSavedTimer.current) clearTimeout(unSavedTimer.current);
+      unSavedTimer.current = setTimeout(() => setUnSaved(false), 2000);
+    }
   }
 
   if (!profile) return null;
@@ -170,73 +207,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Profile header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "14px",
-          padding: "24px 24px 20px",
-          borderBottom: "1px solid var(--divider)",
-        }}
-      >
-        <div
-          style={{
-            width: "52px",
-            height: "52px",
-            borderRadius: "50%",
-            backgroundColor: "var(--divider)",
-            backgroundImage: profile.avatar_url
-              ? `url(${profile.avatar_url})`
-              : "none",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "18px",
-            fontWeight: 600,
-            color: "var(--muted)",
-            flexShrink: 0,
-          }}
-        >
-          {!profile.avatar_url &&
-            (profile.display_name ?? profile.username).charAt(0).toUpperCase()}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{ fontSize: "15px", fontWeight: 600, marginBottom: "2px" }}
-          >
-            {profile.display_name ?? profile.username}
-          </div>
-          <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-            {profile.bio ?? "No bio yet"}
-          </div>
-        </div>
-        <button
-          onClick={() => setEditingProfile((e) => !e)}
-          style={{
-            fontSize: "12px",
-            color: "var(--muted)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontFamily: "Metropolis, sans-serif",
-          }}
-        >
-          {editingProfile ? "Close" : "Edit →"}
-        </button>
-      </div>
-
-      {editingProfile && (
-        <EditProfile
-          profile={profile}
-          onSave={(updated) => {
-            setProfile((prev) => (prev ? { ...prev, ...updated } : prev));
-            setEditingProfile(false);
-          }}
-          onCancel={() => setEditingProfile(false)}
-        />
-      )}
+      <EditProfile
+        profile={profile}
+        onSave={(updated) =>
+          setProfile((prev) => (prev ? { ...prev, ...updated } : prev))
+        }
+      />
 
       {/* Links section */}
       <div style={{ padding: "24px 24px 0" }}>
@@ -356,6 +332,78 @@ export default function DashboardPage() {
       <div style={{ padding: "24px 24px 0" }}>
         <div style={sectionLabel}>Appearance</div>
         <AppearancePicker current={theme} onChange={handleThemeChange} />
+      </div>
+
+      <div style={divider} />
+
+      {/* Account section */}
+      <div style={{ padding: "24px 24px 0" }}>
+        <div style={sectionLabel}>Account</div>
+        <div style={{ marginBottom: "4px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--muted)" }}>
+          Username
+          <span
+            style={{
+              marginLeft: "8px",
+              fontWeight: 400,
+              letterSpacing: 0,
+              textTransform: "none",
+              opacity: unSaved ? 1 : 0,
+              transition: "opacity 0.5s",
+              color: "var(--accent)",
+            }}
+          >
+            updated — your public URL has changed ✓
+          </span>
+        </div>
+        {editingUsername ? (
+          <input
+            autoFocus
+            style={{
+              width: "100%",
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--divider)",
+              borderRadius: "4px",
+              padding: "9px 12px",
+              fontSize: "13px",
+              fontFamily: "Metropolis, sans-serif",
+              color: "var(--text)",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+            type="text"
+            value={username}
+            onChange={(e) => {
+              unEmptyWarned.current = false;
+              setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""));
+            }}
+            onBlur={saveUsername}
+            onKeyDown={(e) =>
+              e.key === "Enter" && (e.target as HTMLInputElement).blur()
+            }
+            placeholder="username"
+          />
+        ) : (
+          <div
+            onClick={() => setEditingUsername(true)}
+            style={{
+              fontSize: "13px",
+              fontFamily: "Metropolis, sans-serif",
+              color: "var(--text)",
+              padding: "2px 0",
+              cursor: "text",
+            }}
+          >
+            {username}
+          </div>
+        )}
+        <p style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
+          Your username is your public profile URL: stackd.kaiafay.com/{username}
+        </p>
+        {unError && (
+          <p style={{ fontSize: "11px", color: "#C0735A", marginTop: "4px" }}>
+            {unError}
+          </p>
+        )}
       </div>
     </main>
   );
