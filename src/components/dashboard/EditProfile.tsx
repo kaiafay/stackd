@@ -46,31 +46,49 @@ export default function EditProfile({ profile, onSave }: Props) {
       setUploading(false);
       return;
     }
+    // Capture old path before any mutations so we can clean up after success
+    const oldPath = profile.avatar_url
+      ? profile.avatar_url.split("/avatars/")[1]?.split("?")[0] ?? null
+      : null;
+
     const fileExt = file.name.split(".").pop();
-    const filePath = `${user.id}/avatar.${fileExt}`;
+    const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
+
+    // 1. Upload new file
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file);
     if (uploadError) {
       setAvatarError(uploadError.message);
       setUploading(false);
       return;
     }
+
     const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    const newUrl = `${data.publicUrl}?t=${Date.now()}`;
+    const newUrl = data.publicUrl;
+
+    // 2. Update DB — if this fails, roll back the upload so nothing is orphaned
     const { error: profileError } = await supabase
       .from("profiles")
       .update({ avatar_url: newUrl })
       .eq("id", profile.id);
     if (profileError) {
+      await supabase.storage.from("avatars").remove([filePath]);
       setAvatarError(profileError.message);
       setUploading(false);
       return;
     }
+
+    // 3. Both succeeded — update state, then remove old file
     setAvatarUrl(newUrl);
     onSave({ avatar_url: newUrl });
     e.target.value = "";
     setUploading(false);
+
+    if (oldPath) {
+      await supabase.storage.from("avatars").remove([oldPath]);
+      // Ignore delete errors — a stale orphan is acceptable
+    }
   }
 
   async function saveDisplayName() {

@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
         if (insertError) {
           console.error("[auth/callback] profile insert failed, retrying with suffix:", insertError.message);
-          const suffixedUsername = `${username.slice(0, 25)}${Math.floor(1000 + Math.random() * 9000)}`;
+          const suffixedUsername = `${username.slice(0, 22)}${data.user.id.slice(0, 8)}`;
           const { error: retryError } = await supabase.from("profiles").insert({
             user_id: data.user.id,
             username: suffixedUsername,
