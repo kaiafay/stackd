@@ -7,7 +7,9 @@ function deriveUsername(email: string): string {
 }
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const requestUrl = new URL(request.url);
+  const { searchParams } = requestUrl;
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? requestUrl.origin;
   const code = searchParams.get("code");
 
   if (code) {
