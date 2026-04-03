@@ -55,11 +55,6 @@ export default async function ProfilePage({
             height: "80px",
             borderRadius: "50%",
             backgroundColor: "var(--divider)",
-            backgroundImage: profile.avatar_url
-              ? `url(${profile.avatar_url})`
-              : "none",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -67,10 +62,19 @@ export default async function ProfilePage({
             fontWeight: 600,
             color: "var(--muted)",
             marginBottom: "16px",
+            overflow: "hidden",
+            flexShrink: 0,
           }}
         >
-          {!profile.avatar_url &&
-            (profile.display_name ?? profile.username).charAt(0).toUpperCase()}
+          {profile.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={`${profile.display_name ?? profile.username}'s avatar`}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            (profile.display_name ?? profile.username).charAt(0).toUpperCase()
+          )}
         </div>
 
         {/* Name */}
