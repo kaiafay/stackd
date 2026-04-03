@@ -422,7 +422,8 @@ export default function DashboardPage() {
           </div>
         )}
         <p style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
-          Your username is your public profile URL: stackd.kaiafay.com/{profile.username}
+          Your username is your public profile URL:{" "}
+          {`${(process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin).replace(/\/$/, "")}/${profile.username}`}
         </p>
         {unError && (
           <p style={{ fontSize: "11px", color: "var(--error)", marginTop: "4px" }}>
