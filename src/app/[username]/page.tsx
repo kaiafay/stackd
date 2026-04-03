@@ -106,7 +106,7 @@ export default async function ProfilePage({
         {!profile.bio && <div style={{ marginBottom: "32px" }} />}
 
         {/* Links */}
-        {links && links.length > 0 && (
+        {links && links.length > 0 ? (
           <ul
             style={{
               width: "100%",
@@ -157,6 +157,17 @@ export default async function ProfilePage({
               </li>
             ))}
           </ul>
+        ) : (
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--muted)",
+              fontStyle: "italic",
+              textAlign: "center",
+            }}
+          >
+            nothing here yet — check back soon.
+          </p>
         )}
 
         {/* Footer */}

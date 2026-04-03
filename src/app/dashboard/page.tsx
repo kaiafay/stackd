@@ -245,12 +245,26 @@ export default function DashboardPage() {
         {loading ? (
           <p style={{ fontSize: "13px", color: "var(--muted)" }}>Loading...</p>
         ) : (
-          <LinkList
-            links={links}
-            onUpdate={updateLink}
-            onDelete={deleteLink}
-            onReorder={reorderLinks}
-          />
+          <>
+            <LinkList
+              links={links}
+              onUpdate={updateLink}
+              onDelete={deleteLink}
+              onReorder={reorderLinks}
+            />
+            {links.length === 0 && !adding && (
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "var(--muted)",
+                  marginBottom: "12px",
+                  fontStyle: "italic",
+                }}
+              >
+                your links live here. add one to get started. ↓
+              </p>
+            )}
+          </>
         )}
 
         {/* Add link form */}
