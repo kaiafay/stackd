@@ -57,18 +57,18 @@ export default function EditProfile({ profile, onSave }: Props) {
       return;
     }
     const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    const newUrl = `${data.publicUrl}?t=${Date.now()}`;
+    const canonicalUrl = data.publicUrl;
     const { error: profileError } = await supabase
       .from("profiles")
-      .update({ avatar_url: newUrl })
+      .update({ avatar_url: canonicalUrl })
       .eq("id", profile.id);
     if (profileError) {
       setAvatarError(profileError.message);
       setUploading(false);
       return;
     }
-    setAvatarUrl(newUrl);
-    onSave({ avatar_url: newUrl });
+    setAvatarUrl(`${canonicalUrl}?t=${Date.now()}`);
+    onSave({ avatar_url: canonicalUrl });
     e.target.value = "";
     setUploading(false);
   }
