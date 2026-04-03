@@ -47,7 +47,6 @@ export default function DashboardPage() {
 
       if (data) {
         setProfile(data);
-        setUsername(data.username);
         setTheme((data.theme as Theme) ?? "light");
         document.documentElement.setAttribute(
           "data-theme",
@@ -403,7 +402,7 @@ export default function DashboardPage() {
           />
         ) : (
           <div
-            onClick={() => setEditingUsername(true)}
+            onClick={() => { setEditingUsername(true); setUsername(profile.username); }}
             style={{
               fontSize: "13px",
               fontFamily: "Metropolis, sans-serif",
@@ -412,11 +411,11 @@ export default function DashboardPage() {
               cursor: "text",
             }}
           >
-            {username}
+            {profile.username}
           </div>
         )}
         <p style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
-          Your username is your public profile URL: stackd.kaiafay.com/{username}
+          Your username is your public profile URL: stackd.kaiafay.com/{profile.username}
         </p>
         {unError && (
           <p style={{ fontSize: "11px", color: "var(--error)", marginTop: "4px" }}>

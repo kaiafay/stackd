@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types";
 import { inputStyle, sectionLabelStyle } from "@/styles/shared";
@@ -27,6 +27,12 @@ export default function EditProfile({ profile, onSave }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    if (!editingDisplayName) setDisplayName(profile.display_name ?? "");
+    if (!editingBio) setBio(profile.bio ?? "");
+    if (!uploading) setAvatarUrl(profile.avatar_url ?? "");
+  }, [profile]);
 
   function flashSaved(setter: (v: boolean) => void) {
     setter(true);
