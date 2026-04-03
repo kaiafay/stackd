@@ -8,6 +8,7 @@ import AppearancePicker from "@/components/dashboard/AppearancePicker";
 import EditProfile from "@/components/dashboard/EditProfile";
 import { useRouter } from "next/navigation";
 import type { Profile, Theme } from "@/types";
+import { inputStyle, sectionLabelStyle } from "@/styles/shared";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -153,14 +154,7 @@ export default function DashboardPage() {
     );
   }
 
-  const sectionLabel: React.CSSProperties = {
-    fontSize: "11px",
-    fontWeight: 600,
-    letterSpacing: "0.8px",
-    textTransform: "uppercase",
-    color: "var(--muted)",
-    marginBottom: "12px",
-  };
+  const sectionLabel = { ...sectionLabelStyle, marginBottom: "12px" } as React.CSSProperties;
 
   const divider: React.CSSProperties = {
     height: "1px",
@@ -168,18 +162,7 @@ export default function DashboardPage() {
     margin: "24px 24px 0",
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    backgroundColor: "var(--surface)",
-    border: "1px solid var(--divider)",
-    borderRadius: "4px",
-    padding: "9px 12px",
-    fontSize: "13px",
-    fontFamily: "Metropolis, sans-serif",
-    color: "var(--text)",
-    outline: "none",
-    marginBottom: "8px",
-  };
+  const formInputStyle = { ...inputStyle, backgroundColor: "var(--surface)", marginBottom: "8px" } as React.CSSProperties;
 
   return (
     <main
@@ -283,7 +266,7 @@ export default function DashboardPage() {
         {adding ? (
           <div style={{ marginTop: "8px" }}>
             <input
-              style={inputStyle}
+              style={formInputStyle}
               type="text"
               placeholder="Title"
               value={newTitle}
@@ -291,7 +274,7 @@ export default function DashboardPage() {
               autoFocus
             />
             <input
-              style={inputStyle}
+              style={formInputStyle}
               type="url"
               placeholder="https://"
               value={newUrl}
@@ -436,7 +419,7 @@ export default function DashboardPage() {
           Your username is your public profile URL: stackd.kaiafay.com/{username}
         </p>
         {unError && (
-          <p style={{ fontSize: "11px", color: "#C0735A", marginTop: "4px" }}>
+          <p style={{ fontSize: "11px", color: "var(--error)", marginTop: "4px" }}>
             {unError}
           </p>
         )}

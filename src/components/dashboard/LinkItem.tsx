@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Link } from "@/types";
+import { inputStyle } from "@/styles/shared";
 
 type Props = {
   link: Link;
@@ -47,18 +48,6 @@ export default function LinkItem({
     gap: "10px",
     padding: "13px 14px",
     cursor: "pointer",
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    backgroundColor: "var(--bg)",
-    border: "1px solid var(--divider)",
-    borderRadius: "4px",
-    padding: "9px 12px",
-    fontSize: "13px",
-    fontFamily: "Metropolis, sans-serif",
-    color: "var(--text)",
-    outline: "none",
   };
 
   return (
@@ -226,7 +215,7 @@ export default function LinkItem({
                 fontWeight: 500,
                 fontFamily: "Metropolis, sans-serif",
                 backgroundColor: "transparent",
-                color: "#C0735A",
+                color: "var(--error)",
                 border: "none",
                 padding: "7px 0",
                 cursor: "pointer",
