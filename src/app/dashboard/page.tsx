@@ -12,6 +12,7 @@ import { inputStyle, sectionLabelStyle } from "@/styles/shared";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [showSpinner, setShowSpinner] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
   const [newTitle, setNewTitle] = useState("");
   const [newUrl, setNewUrl] = useState("");
@@ -27,6 +28,11 @@ export default function DashboardPage() {
 
   const { links, loading, addLink, updateLink, deleteLink, reorderLinks } =
     useLinks(profile?.id ?? "");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSpinner(true), 200);
+    return () => clearTimeout(timer);
+  }, []);
 
   // fetch profile
   useEffect(() => {
@@ -116,6 +122,7 @@ export default function DashboardPage() {
   }
 
   if (!profile) {
+    if (!showSpinner) return null;
     return (
       <main
         style={{
