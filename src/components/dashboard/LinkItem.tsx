@@ -78,18 +78,31 @@ export default function LinkItem({
           {link.title}
         </span>
         {!editing && (
-          <span
-            style={{
-              fontSize: "11px",
-              color: "var(--muted)",
-              maxWidth: "100px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {link.url.replace("https://", "").replace("http://", "")}
-          </span>
+          <>
+            <span
+              style={{
+                fontSize: "11px",
+                color: "var(--muted)",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              {link.click_count === 1
+                ? "1 click"
+                : `${link.click_count} clicks`}
+            </span>
+            <span
+              aria-hidden="true"
+              style={{
+                display: "inline-block",
+                width: "1px",
+                height: "0.9em",
+                backgroundColor: "var(--divider)",
+                flexShrink: 0,
+                alignSelf: "center",
+              }}
+            />
+          </>
         )}
         <span
           style={{ fontSize: "13px", color: "var(--muted)", flexShrink: 0 }}
