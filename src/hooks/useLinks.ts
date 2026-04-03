@@ -13,6 +13,14 @@ export type Link = {
   click_count: number;
 };
 
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+    return `https://${trimmed}`;
+  }
+  return trimmed;
+}
+
 export function useLinks(profileId: string) {
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,9 +44,10 @@ export function useLinks(profileId: string) {
 
   async function addLink(title: string, url: string) {
     const order_index = links.length;
+    const normalized = normalizeUrl(url);
     const { data } = await supabase
       .from("links")
-      .insert({ profile_id: profileId, title, url, order_index })
+      .insert({ profile_id: profileId, title, url: normalized, order_index })
       .select()
       .single();
     if (data) setLinks((prev) => [...prev, data]);
@@ -48,9 +57,12 @@ export function useLinks(profileId: string) {
     id: string,
     updates: Partial<Pick<Link, "title" | "url" | "enabled">>,
   ) {
+    const normalized = updates.url
+      ? { ...updates, url: normalizeUrl(updates.url) }
+      : updates;
     const { data } = await supabase
       .from("links")
-      .update(updates)
+      .update(normalized)
       .eq("id", id)
       .select()
       .single();
