@@ -46,29 +46,38 @@ export default function EditProfile({ profile, onSave }: Props) {
       setUploading(false);
       return;
     }
+    // Delete previous avatar file if one exists
+    if (profile.avatar_url) {
+      const oldPath = profile.avatar_url.split("/avatars/")[1]?.split("?")[0];
+      if (oldPath) {
+        await supabase.storage.from("avatars").remove([oldPath]);
+        // Ignore delete errors — a stale orphan is acceptable
+      }
+    }
+
     const fileExt = file.name.split(".").pop();
-    const filePath = `${user.id}/avatar.${fileExt}`;
+    const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file);
     if (uploadError) {
       setAvatarError(uploadError.message);
       setUploading(false);
       return;
     }
     const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    const canonicalUrl = data.publicUrl;
+    const newUrl = data.publicUrl;
     const { error: profileError } = await supabase
       .from("profiles")
-      .update({ avatar_url: canonicalUrl })
+      .update({ avatar_url: newUrl })
       .eq("id", profile.id);
     if (profileError) {
       setAvatarError(profileError.message);
       setUploading(false);
       return;
     }
-    setAvatarUrl(`${canonicalUrl}?t=${Date.now()}`);
-    onSave({ avatar_url: canonicalUrl });
+    setAvatarUrl(newUrl);
+    onSave({ avatar_url: newUrl });
     e.target.value = "";
     setUploading(false);
   }
