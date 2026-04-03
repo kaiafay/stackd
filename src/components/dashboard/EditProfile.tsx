@@ -163,19 +163,24 @@ export default function EditProfile({ profile, onSave }: Props) {
             height: "52px",
             borderRadius: "50%",
             backgroundColor: "var(--divider)",
-            backgroundImage: avatarUrl ? `url(${avatarUrl})` : "none",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: "18px",
             fontWeight: 600,
             color: "var(--muted)",
+            overflow: "hidden",
           }}
         >
-          {!avatarUrl &&
-            (displayName || profile.username).charAt(0).toUpperCase()}
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="Profile avatar"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            (displayName || profile.username).charAt(0).toUpperCase()
+          )}
         </div>
         <div
           aria-hidden="true"

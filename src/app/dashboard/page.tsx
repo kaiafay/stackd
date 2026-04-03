@@ -115,7 +115,43 @@ export default function DashboardPage() {
     }
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "var(--bg)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "12px",
+          }}
+        >
+          <div
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              border: "2px solid var(--divider)",
+              borderTopColor: "var(--accent)",
+              animation: "spin 0.8s linear infinite",
+            }}
+          />
+          <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+            Loading…
+          </span>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </main>
+    );
+  }
 
   const sectionLabel: React.CSSProperties = {
     fontSize: "11px",
