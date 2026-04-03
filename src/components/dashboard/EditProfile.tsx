@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types";
 import { inputStyle, sectionLabelStyle } from "@/styles/shared";
@@ -11,8 +11,8 @@ type Props = {
 };
 
 export default function EditProfile({ profile, onSave }: Props) {
-  const [displayName, setDisplayName] = useState(profile.display_name ?? "");
-  const [bio, setBio] = useState(profile.bio ?? "");
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
 
   const [editingDisplayName, setEditingDisplayName] = useState(false);
@@ -27,12 +27,6 @@ export default function EditProfile({ profile, onSave }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = useMemo(() => createClient(), []);
-
-  useEffect(() => {
-    if (!editingDisplayName) setDisplayName(profile.display_name ?? "");
-    if (!editingBio) setBio(profile.bio ?? "");
-    if (!uploading) setAvatarUrl(profile.avatar_url ?? "");
-  }, [profile]);
 
   function flashSaved(setter: (v: boolean) => void) {
     setter(true);
@@ -165,7 +159,7 @@ export default function EditProfile({ profile, onSave }: Props) {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            (displayName || profile.username).charAt(0).toUpperCase()
+            (profile.display_name || profile.username).charAt(0).toUpperCase()
           )}
         </div>
         <div
@@ -242,8 +236,8 @@ export default function EditProfile({ profile, onSave }: Props) {
               placeholder="Your name"
             />
           ) : (
-            <div onClick={() => setEditingDisplayName(true)} style={textStyle}>
-              {displayName || (
+            <div onClick={() => { setEditingDisplayName(true); setDisplayName(profile.display_name ?? ""); }} style={textStyle}>
+              {profile.display_name || (
                 <span style={{ color: "var(--muted)" }}>Your name</span>
               )}
             </div>
@@ -283,8 +277,8 @@ export default function EditProfile({ profile, onSave }: Props) {
               placeholder="A short bio"
             />
           ) : (
-            <div onClick={() => setEditingBio(true)} style={textStyle}>
-              {bio || (
+            <div onClick={() => { setEditingBio(true); setBio(profile.bio ?? ""); }} style={textStyle}>
+              {profile.bio || (
                 <span style={{ color: "var(--muted)" }}>A short bio</span>
               )}
             </div>
