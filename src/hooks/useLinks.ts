@@ -42,15 +42,17 @@ export function useLinks(profileId: string) {
     setLoading(false);
   }
 
-  async function addLink(title: string, url: string) {
+  async function addLink(title: string, url: string): Promise<{ error: Error | null }> {
     const order_index = links.length;
     const normalized = normalizeUrl(url);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("links")
       .insert({ profile_id: profileId, title, url: normalized, order_index })
       .select()
       .single();
+    if (error) return { error };
     if (data) setLinks((prev) => [...prev, data]);
+    return { error: null };
   }
 
   async function updateLink(
@@ -70,15 +72,17 @@ export function useLinks(profileId: string) {
   }
 
   async function deleteLink(id: string) {
-    await supabase.from("links").delete().eq("id", id);
-    setLinks((prev) => prev.filter((l) => l.id !== id));
+    const { error } = await supabase.from("links").delete().eq("id", id);
+    if (!error) setLinks((prev) => prev.filter((l) => l.id !== id));
   }
 
   async function reorderLinks(reordered: Link[]) {
+    const previous = links;
     setLinks(reordered);
-    await supabase
+    const { error } = await supabase
       .from("links")
       .upsert(reordered.map((l, i) => ({ ...l, order_index: i })));
+    if (error) setLinks(previous);
   }
 
   return { links, loading, addLink, updateLink, deleteLink, reorderLinks };
