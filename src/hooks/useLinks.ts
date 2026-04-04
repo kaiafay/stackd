@@ -49,22 +49,24 @@ export function useLinks(profileId: string) {
   async function updateLink(
     id: string,
     updates: Partial<Pick<Link, "title" | "url" | "enabled">>,
-  ) {
+  ): Promise<{ error: { message: string } | null }> {
     const normalized = updates.url
       ? { ...updates, url: normalizeUrl(updates.url) }
       : updates;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("links")
       .update(normalized)
       .eq("id", id)
       .select()
       .single();
     if (data) setLinks((prev) => prev.map((l) => (l.id === id ? data : l)));
+    return { error: error ?? null };
   }
 
-  async function deleteLink(id: string) {
+  async function deleteLink(id: string): Promise<{ error: { message: string } | null }> {
     const { error } = await supabase.from("links").delete().eq("id", id);
     if (!error) setLinks((prev) => prev.filter((l) => l.id !== id));
+    return { error: error ?? null };
   }
 
   async function reorderLinks(reordered: Link[]) {

@@ -25,8 +25,8 @@ type Props = {
   onUpdate: (
     id: string,
     updates: Partial<Pick<Link, "title" | "url" | "enabled">>,
-  ) => void;
-  onDelete: (id: string) => void;
+  ) => Promise<{ error: { message: string } | null }>;
+  onDelete: (id: string) => Promise<{ error: { message: string } | null }>;
   onReorder: (links: Link[]) => void;
 };
 

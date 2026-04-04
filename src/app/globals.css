@@ -23,6 +23,7 @@
   --accent: #c4b5a0;
   --muted: #7a7368;
   --surface: #252320;
+  --error: #C0735A;
 }
 
 [data-theme="color"] {
@@ -32,6 +33,7 @@
   --accent: #6b7f9e;
   --muted: #a09880;
   --surface: #ded5c8;
+  --error: #C0735A;
 }
 
 * {

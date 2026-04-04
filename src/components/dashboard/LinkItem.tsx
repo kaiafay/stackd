@@ -9,8 +9,8 @@ type Props = {
   onUpdate: (
     id: string,
     updates: Partial<Pick<Link, "title" | "url" | "enabled">>,
-  ) => void;
-  onDelete: (id: string) => void;
+  ) => Promise<{ error: { message: string } | null }>;
+  onDelete: (id: string) => Promise<{ error: { message: string } | null }>;
   dragHandleProps?: React.HTMLAttributes<HTMLSpanElement>;
 };
 
@@ -23,15 +23,32 @@ export default function LinkItem({
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(link.title);
   const [url, setUrl] = useState(link.url);
+  const [saveError, setSaveError] = useState("");
 
-  function handleSave() {
-    onUpdate(link.id, { title, url });
-    setEditing(false);
+  function openEdit() {
+    setTitle(link.title);
+    setUrl(link.url);
+    setEditing(true);
+  }
+
+  async function handleSave() {
+    setSaveError("");
+    const { error } = await onUpdate(link.id, { title, url });
+    if (error) {
+      setSaveError(
+        error.message.toLowerCase().includes("fetch")
+          ? "couldn't save — check your connection"
+          : "save failed — please try again",
+      );
+    } else {
+      setEditing(false);
+    }
   }
 
   function handleCancel() {
     setTitle(link.title);
     setUrl(link.url);
+    setSaveError("");
     setEditing(false);
   }
 
@@ -52,7 +69,7 @@ export default function LinkItem({
 
   return (
     <div style={surface}>
-      <div style={rowStyle} onClick={() => setEditing((e) => !e)}>
+      <div style={rowStyle} onClick={() => editing ? handleCancel() : openEdit()}>
         <span
           {...dragHandleProps}
           onClick={(e) => e.stopPropagation()}
@@ -188,6 +205,11 @@ export default function LinkItem({
               Visible on profile
             </span>
           </div>
+          {saveError && (
+            <p style={{ fontSize: "11px", color: "var(--error)", margin: 0 }}>
+              {saveError}
+            </p>
+          )}
           <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>
             <button
               onClick={handleSave}
@@ -222,7 +244,14 @@ export default function LinkItem({
               Cancel
             </button>
             <button
-              onClick={() => onDelete(link.id)}
+              onClick={async () => {
+                const { error } = await onDelete(link.id);
+                if (error) setSaveError(
+                  error.message.toLowerCase().includes("fetch")
+                    ? "couldn't delete — check your connection"
+                    : "delete failed — please try again",
+                );
+              }}
               style={{
                 fontSize: "12px",
                 fontWeight: 500,
