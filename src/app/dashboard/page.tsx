@@ -21,6 +21,8 @@ export default function DashboardPage() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [unSaved, setUnSaved] = useState(false);
   const [unError, setUnError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unEmptyWarned = useRef(false);
   const router = useRouter();
@@ -425,6 +427,30 @@ export default function DashboardPage() {
           Your username is your public profile URL:{" "}
           {`${(process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin).replace(/\/$/, "")}/${profile.username}`}
         </p>
+        <button
+          onClick={() => {
+            const url = `${(process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin).replace(/\/$/, "")}/${profile.username}`;
+            navigator.clipboard.writeText(url).then(() => {
+              setCopied(true);
+              if (copiedTimer.current) clearTimeout(copiedTimer.current);
+              copiedTimer.current = setTimeout(() => setCopied(false), 2000);
+            }).catch(() => {});
+          }}
+          style={{
+            marginTop: "8px",
+            fontSize: "12px",
+            fontWeight: 500,
+            fontFamily: "Metropolis, sans-serif",
+            color: "var(--accent)",
+            background: "none",
+            border: "1px solid var(--accent)",
+            borderRadius: "4px",
+            padding: "6px 14px",
+            cursor: "pointer",
+          }}
+        >
+          {copied ? "Copied!" : "Copy my link"}
+        </button>
         {unError && (
           <p style={{ fontSize: "11px", color: "var(--error)", marginTop: "4px" }}>
             {unError}
