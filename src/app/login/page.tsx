@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -28,12 +28,58 @@ function LoginErrorMessage() {
   );
 }
 
-export default function LoginPage() {
+const TITLE = "stackd";
+const CHAR_DELAY = 80;
 
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [typedText, setTypedText] = useState("");
+  const [cursorVisible, setCursorVisible] = useState(true);
+
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setTypedText(TITLE);
+      setCursorVisible(false);
+      return;
+    }
+
+    let i = 0;
+    let mounted = true;
+
+    const type = () => {
+      if (!mounted) return;
+      if (i < TITLE.length) {
+        setTypedText(TITLE.slice(0, i + 1));
+        i++;
+        timeoutRef.current = setTimeout(type, CHAR_DELAY);
+      } else {
+        let blinks = 0;
+        intervalRef.current = setInterval(() => {
+          if (!mounted) return;
+          setCursorVisible((v) => !v);
+          blinks++;
+          if (blinks >= 5) {
+            clearInterval(intervalRef.current!);
+            setCursorVisible(false);
+          }
+        }, 350);
+      }
+    };
+
+    timeoutRef.current = setTimeout(type, 200);
+
+    return () => {
+      mounted = false;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   async function handleLogin() {
     setLoading(true);
@@ -69,15 +115,38 @@ export default function LoginPage() {
       <div style={{ width: "100%", maxWidth: "380px" }}>
         <h1
           style={{
-            fontSize: "20px",
+            fontSize: "32px",
             fontWeight: 600,
-            letterSpacing: "-0.3px",
+            letterSpacing: "-0.5px",
             marginBottom: "8px",
             color: "var(--text)",
           }}
         >
-          stackd
+          {typedText}
+          <span
+            style={{
+              display: "inline-block",
+              width: "2px",
+              height: "0.85em",
+              backgroundColor: "var(--accent)",
+              marginLeft: "2px",
+              verticalAlign: "middle",
+              opacity: cursorVisible ? 1 : 0,
+            }}
+          />
         </h1>
+
+        <p
+          style={{
+            fontSize: "14px",
+            fontWeight: 500,
+            color: "var(--muted)",
+            marginBottom: "28px",
+            letterSpacing: "0.1px",
+          }}
+        >
+          one page. every link.
+        </p>
 
         {!submitted ? (
           <>
@@ -85,10 +154,12 @@ export default function LoginPage() {
               style={{
                 fontSize: "13px",
                 color: "var(--muted)",
-                marginBottom: "32px",
+                marginBottom: "16px",
+                lineHeight: 1.6,
               }}
             >
-              Enter your email to sign in or create an account.
+              Create a free profile with all your links and share it anywhere.
+              Enter your email to get started.
             </p>
 
             <input
