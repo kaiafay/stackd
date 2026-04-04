@@ -176,15 +176,19 @@ export default async function ProfilePage({
 
         {/* Footer */}
         <div style={{ marginTop: "40px" }}>
-          <span
+          <a
+            href="/login"
             style={{
               fontSize: "11px",
               color: "var(--muted)",
               letterSpacing: "0.5px",
+              textDecoration: "underline",
+              textDecorationColor: "var(--divider)",
+              textUnderlineOffset: "3px",
             }}
           >
-            stackd
-          </span>
+            made with stackd
+          </a>
         </div>
       </div>
     </main>
