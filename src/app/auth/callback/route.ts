@@ -33,6 +33,7 @@ export async function GET(request: Request) {
           user_id: data.user.id,
           username,
           display_name: username,
+          theme: "default",
         });
 
         if (insertError) {
@@ -42,6 +43,7 @@ export async function GET(request: Request) {
             user_id: data.user.id,
             username: suffixedUsername,
             display_name: suffixedUsername,
+            theme: "default",
           });
           if (retryError) {
             console.error("[auth/callback] profile insert retry failed:", retryError.message);

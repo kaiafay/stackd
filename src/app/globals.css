@@ -1,6 +1,16 @@
 @import "@fontsource/metropolis/400.css";
 @import "@fontsource/metropolis/500.css";
 @import "@fontsource/metropolis/600.css";
+@import "@fontsource/playfair-display/400.css";
+@import "@fontsource/playfair-display/500.css";
+@import "@fontsource/playfair-display/600.css";
+@import "@fontsource/oswald/400.css";
+@import "@fontsource/oswald/500.css";
+@import "@fontsource/oswald/600.css";
+@import "@fontsource/petit-formal-script/400.css";
+@import "@fontsource/fira-code/400.css";
+@import "@fontsource/fira-code/500.css";
+@import "@fontsource/fira-code/600.css";
 
 @tailwind base;
 @tailwind components;
@@ -13,27 +23,52 @@
   --accent: #8b7355;
   --muted: #a09880;
   --surface: #ede8e0;
-  --error: #C0735A;
+  --error: #c0735a;
+  --font-family: "Metropolis", sans-serif;
 }
 
-[data-theme="dark"] {
-  --bg: #1c1a17;
-  --text: #f0ebe3;
-  --divider: #2e2b27;
-  --accent: #c4b5a0;
-  --muted: #7a7368;
-  --surface: #252320;
-  --error: #C0735A;
+[data-theme="retro"] {
+  --bg: #f2e8d9;
+  --text: #2c1a0e;
+  --divider: #ddd0bb;
+  --accent: #c4541a;
+  --muted: #9e8572;
+  --surface: #e8d9c0;
+  --error: #c0735a;
+  --font-family: "Playfair Display", serif;
 }
 
-[data-theme="color"] {
-  --bg: #e8e0d5;
-  --text: #1a1714;
-  --divider: #d4cbb8;
-  --accent: #6b7f9e;
-  --muted: #a09880;
-  --surface: #ded5c8;
-  --error: #C0735A;
+[data-theme="noir"] {
+  --bg: #111111;
+  --text: #f0f0f0;
+  --divider: #2a2a2a;
+  --accent: #888888;
+  --muted: #555555;
+  --surface: #1a1a1a;
+  --error: #c0735a;
+  --font-family: "Oswald", sans-serif;
+}
+
+[data-theme="soft"] {
+  --bg: #f5eef0;
+  --text: #2d2028;
+  --divider: #e4d5d9;
+  --accent: #b07a8a;
+  --muted: #a8909a;
+  --surface: #ede0e4;
+  --error: #c0735a;
+  --font-family: "Petit Formal Script", cursive;
+}
+
+[data-theme="terminal"] {
+  --bg: #0d0d0d;
+  --text: #e8e8e8;
+  --divider: #1e1e1e;
+  --accent: #ffb000;
+  --muted: #666666;
+  --surface: #151515;
+  --error: #c0735a;
+  --font-family: "Fira Code", monospace;
 }
 
 * {
@@ -45,7 +80,7 @@
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: "Metropolis", sans-serif;
+  font-family: var(--font-family);
   transition:
     background-color 0.25s ease,
     color 0.25s ease;

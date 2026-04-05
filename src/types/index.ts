@@ -8,7 +8,7 @@ export type Profile = {
   avatar_url: string | null;
 };
 
-export type Theme = "light" | "dark" | "color";
+export type Theme = "default" | "retro" | "noir" | "soft" | "terminal";
 
 export type Link = {
   id: string;

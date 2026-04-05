@@ -13,7 +13,7 @@ import { inputStyle, sectionLabelStyle } from "@/styles/shared";
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showSpinner, setShowSpinner] = useState(false);
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("default");
   const [newTitle, setNewTitle] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [adding, setAdding] = useState(false);
@@ -55,10 +55,10 @@ export default function DashboardPage() {
 
       if (data) {
         setProfile(data);
-        setTheme((data.theme as Theme) ?? "light");
+        setTheme((data.theme as Theme) ?? "default");
         document.documentElement.setAttribute(
           "data-theme",
-          data.theme === "light" ? "" : data.theme,
+          data.theme === "default" ? "" : data.theme,
         );
       }
     }
@@ -69,7 +69,7 @@ export default function DashboardPage() {
     setTheme(newTheme);
     document.documentElement.setAttribute(
       "data-theme",
-      newTheme === "light" ? "" : newTheme,
+      newTheme === "default" ? "" : newTheme,
     );
     if (profile) {
       await supabase
@@ -357,7 +357,7 @@ export default function DashboardPage() {
 
       {/* Appearance section */}
       <div style={{ padding: "24px 24px 0" }}>
-        <div style={sectionLabel}>Appearance</div>
+        <div style={sectionLabel}>Theme</div>
         <AppearancePicker current={theme} onChange={handleThemeChange} />
       </div>
 
