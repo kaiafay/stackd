@@ -7,15 +7,17 @@ type Props = {
   onChange: (theme: Theme) => void;
 };
 
-const themes: { id: Theme; label: string; bg: string; border?: string }[] = [
-  { id: "light", label: "Light", bg: "#F7F4EF", border: "#C8C0B4" },
-  { id: "dark", label: "Dark", bg: "#1C1A17" },
-  { id: "color", label: "Color", bg: "#6B7F9E" },
+const themes: { id: Theme; label: string; bg: string; accent: string }[] = [
+  { id: "default",  label: "Default",  bg: "#F7F4EF", accent: "#8B7355" },
+  { id: "retro",    label: "Retro",    bg: "#F2E8D9", accent: "#C4541A" },
+  { id: "noir",     label: "Noir",     bg: "#111111", accent: "#888888" },
+  { id: "soft",     label: "Soft",     bg: "#F5EEF0", accent: "#B07A8A" },
+  { id: "terminal", label: "Terminal", bg: "#0D0D0D", accent: "#FFB000" },
 ];
 
 export default function AppearancePicker({ current, onChange }: Props) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
       {themes.map((theme) => (
         <div
           key={theme.id}
@@ -32,10 +34,9 @@ export default function AppearancePicker({ current, onChange }: Props) {
               width: "28px",
               height: "28px",
               borderRadius: "50%",
-              backgroundColor: theme.bg,
-              border: `1.5px solid ${theme.border ?? theme.bg}`,
-              outline:
-                current === theme.id ? "2px solid var(--accent)" : "none",
+              background: `linear-gradient(135deg, ${theme.bg} 50%, ${theme.accent} 50%)`,
+              border: "1.5px solid var(--divider)",
+              outline: current === theme.id ? "2px solid var(--accent)" : "none",
               outlineOffset: "2px",
               flexShrink: 0,
             }}

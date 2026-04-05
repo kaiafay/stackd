@@ -48,7 +48,15 @@ Always use the correct client for the rendering context.
 - **`avatars`** storage bucket: public, for user avatar images
 
 ### Theming
-Three themes (`light`, `dark`, `color`) defined as CSS custom properties in `src/app/globals.css` via `[data-theme]` attribute. Variables: `--bg`, `--text`, `--divider`, `--accent`, `--muted`, `--surface`. Components use React inline styles referencing these vars.
+Five presets (`default`, `retro`, `noir`, `soft`, `terminal`) defined as CSS custom properties in `src/app/globals.css` via `[data-theme]` attribute. Each preset sets `--bg`, `--text`, `--divider`, `--accent`, `--muted`, `--surface`, and `--font-family`. The `default` preset maps to `:root` (no `data-theme` attribute). Components use React inline styles referencing these vars.
+
+| Preset | Font |
+|---|---|
+| default | Metropolis |
+| retro | Playfair Display |
+| noir | Oswald |
+| soft | Petit Formal Script |
+| terminal | Fira Code |
 
 ### Path alias
 `@/*` maps to `./src/*` (configured in `tsconfig.json`).

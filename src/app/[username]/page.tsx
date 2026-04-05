@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 export default async function ProfilePage({
   params,
@@ -24,7 +25,7 @@ export default async function ProfilePage({
     .eq("enabled", true)
     .order("order_index");
 
-  const themeAttr = profile.theme === "light" ? "" : profile.theme;
+  const themeAttr = profile.theme === "default" ? "" : profile.theme;
 
   return (
     <main
@@ -37,6 +38,7 @@ export default async function ProfilePage({
         justifyContent: "center",
         padding: "48px 24px",
         backgroundColor: "var(--bg)",
+        fontFamily: "var(--font-family)",
       }}
     >
       <div
@@ -176,7 +178,7 @@ export default async function ProfilePage({
 
         {/* Footer */}
         <div style={{ marginTop: "40px" }}>
-          <a
+          <Link
             href="/login"
             style={{
               fontSize: "11px",
@@ -188,7 +190,7 @@ export default async function ProfilePage({
             }}
           >
             made with stackd
-          </a>
+          </Link>
         </div>
       </div>
     </main>
