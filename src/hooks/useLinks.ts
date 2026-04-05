@@ -38,7 +38,19 @@ export function useLinks(profileId: string) {
     const normalized = normalizeUrl(url);
     const { data, error } = await supabase
       .from("links")
-      .insert({ profile_id: profileId, title, url: normalized, order_index })
+      .insert({ profile_id: profileId, title, url: normalized, order_index, kind: "link" })
+      .select()
+      .single();
+    if (error) return { error };
+    if (data) setLinks((prev) => [...prev, data]);
+    return { error: null };
+  }
+
+  async function addSection(): Promise<{ error: Error | null }> {
+    const order_index = links.length;
+    const { data, error } = await supabase
+      .from("links")
+      .insert({ profile_id: profileId, title: "New Section", kind: "section", order_index })
       .select()
       .single();
     if (error) return { error };
@@ -78,5 +90,5 @@ export function useLinks(profileId: string) {
     if (error) setLinks(previous);
   }
 
-  return { links, loading, addLink, updateLink, deleteLink, reorderLinks };
+  return { links, loading, addLink, addSection, updateLink, deleteLink, reorderLinks };
 }

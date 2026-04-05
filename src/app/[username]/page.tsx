@@ -22,7 +22,7 @@ export default async function ProfilePage({
     .from("links")
     .select("*")
     .eq("profile_id", profile.id)
-    .eq("enabled", true)
+    .or("enabled.eq.true,kind.eq.section")
     .order("order_index");
 
   const themeAttr = profile.theme === "default" ? "" : profile.theme;
@@ -113,52 +113,102 @@ export default async function ProfilePage({
 
         {/* Links */}
         {links && links.length > 0 ? (
-          <ul
-            style={{
-              width: "100%",
-              listStyle: "none",
-              borderLeft: "2px solid var(--accent)",
-              paddingLeft: 0,
-            }}
-          >
-            {links.map((link) => (
-              <li key={link.id}>
-                <a
-                  href={`/api/click/${link.id}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "15px 0 15px 14px",
-                    textDecoration: "none",
-                    color: "var(--text)",
-                    width: "100%",
-                  }}
-                >
-                  <span>
-                    <span style={{ display: "block", fontSize: "14px", fontWeight: 500 }}>
-                      {link.title}
-                    </span>
-                    {link.subtitle && (
-                      <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                        {link.subtitle}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      color: "var(--accent)",
-                      flexShrink: 0,
-                      marginLeft: "12px",
-                    }}
-                  >
-                    →
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          <div style={{ width: "100%" }}>
+            {(() => {
+              // Split links into segments: section headers and groups of link items
+              type Seg = { kind: "section"; id: string; title: string } | { kind: "links"; items: typeof links };
+              const segments: Seg[] = [];
+              let group: typeof links = [];
+              for (const link of links) {
+                if (link.kind === "section") {
+                  if (group.length > 0) { segments.push({ kind: "links", items: group }); group = []; }
+                  segments.push({ kind: "section", id: link.id, title: link.title });
+                } else if (link.url?.trim()) {
+                  group.push(link);
+                }
+              }
+              if (group.length > 0) segments.push({ kind: "links", items: group });
+
+              return segments.map((seg) => {
+                if (seg.kind === "section") {
+                  return (
+                    <div
+                      key={seg.id}
+                      style={{
+                        fontSize: "18px",
+                        fontWeight: 700,
+                        color: "var(--text)",
+                        padding: "20px 0 8px 14px",
+                      }}
+                    >
+                      {seg.title}
+                    </div>
+                  );
+                }
+                return (
+                  <div key={seg.items[0].id} style={{ display: "flex" }}>
+                    <div
+                      style={{
+                        width: "2px",
+                        backgroundColor: "var(--accent)",
+                        alignSelf: "stretch",
+                        marginTop: "15px",
+                        marginBottom: "15px",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <ul
+                      style={{
+                        flex: 1,
+                        listStyle: "none",
+                        paddingLeft: 0,
+                        margin: 0,
+                        minWidth: 0,
+                      }}
+                    >
+                    {seg.items.map((link) => (
+                      <li key={link.id}>
+                        <a
+                          href={`/api/click/${link.id}`}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "15px 0 15px 14px",
+                            textDecoration: "none",
+                            color: "var(--text)",
+                            width: "100%",
+                          }}
+                        >
+                          <span>
+                            <span style={{ display: "block", fontSize: "14px", fontWeight: 500 }}>
+                              {link.title}
+                            </span>
+                            {link.subtitle && (
+                              <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                                {link.subtitle}
+                              </span>
+                            )}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              color: "var(--accent)",
+                              flexShrink: 0,
+                              marginLeft: "12px",
+                            }}
+                          >
+                            →
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                    </ul>
+                  </div>
+                );
+              });
+            })()}
+          </div>
         ) : (
           <p
             style={{

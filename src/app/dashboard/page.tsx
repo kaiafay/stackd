@@ -23,13 +23,14 @@ export default function DashboardPage() {
   const [unSaved, setUnSaved] = useState(false);
   const [unError, setUnError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [sectionError, setSectionError] = useState("");
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unEmptyWarned = useRef(false);
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
-  const { links, loading, addLink, updateLink, deleteLink, reorderLinks } =
+  const { links, loading, addLink, addSection, updateLink, deleteLink, reorderLinks } =
     useLinks(profile?.id ?? "");
 
   useEffect(() => {
@@ -338,27 +339,55 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <button
-            onClick={() => setAdding(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              width: "100%",
-              padding: "13px 14px",
-              background: "none",
-              border: "1px dashed var(--divider)",
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontFamily: "Metropolis, sans-serif",
-              color: "var(--muted)",
-              cursor: "pointer",
-              marginTop: "4px",
-            }}
-          >
-            <span style={{ fontSize: "16px", fontWeight: 300 }}>+</span> Add
-            link
-          </button>
+          <>
+            <button
+              onClick={() => setAdding(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+                padding: "13px 14px",
+                background: "none",
+                border: "1px dashed var(--divider)",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontFamily: "Metropolis, sans-serif",
+                color: "var(--muted)",
+                cursor: "pointer",
+                marginTop: "4px",
+              }}
+            >
+              <span style={{ fontSize: "16px", fontWeight: 300 }}>+</span> Add
+              link
+            </button>
+            <button
+              onClick={async () => {
+                setSectionError("");
+                const { error } = await addSection();
+                if (error) setSectionError("couldn't add section — try again");
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "none",
+                border: "none",
+                fontSize: "12px",
+                fontFamily: "Metropolis, sans-serif",
+                color: "var(--muted)",
+                cursor: "pointer",
+                padding: "8px 2px 0",
+              }}
+            >
+              + Add section
+            </button>
+            {sectionError && (
+              <p style={{ fontSize: "11px", color: "var(--error)", margin: "4px 0 0" }}>
+                {sectionError}
+              </p>
+            )}
+          </>
         )}
       </div>
 

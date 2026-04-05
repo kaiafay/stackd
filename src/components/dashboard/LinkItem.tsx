@@ -23,18 +23,22 @@ export default function LinkItem({
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(link.title);
   const [subtitle, setSubtitle] = useState(link.subtitle ?? "");
-  const [url, setUrl] = useState(link.url);
+  const [url, setUrl] = useState(link.url ?? "");
   const [saveError, setSaveError] = useState("");
 
   function openEdit() {
     setTitle(link.title);
     setSubtitle(link.subtitle ?? "");
-    setUrl(link.url);
+    setUrl(link.url ?? "");
     setEditing(true);
   }
 
   async function handleSave() {
     setSaveError("");
+    if (!url.trim()) {
+      setSaveError("url can't be empty");
+      return;
+    }
     const { error } = await onUpdate(link.id, { title, subtitle: subtitle || null, url });
     if (error) {
       setSaveError(
@@ -50,7 +54,7 @@ export default function LinkItem({
   function handleCancel() {
     setTitle(link.title);
     setSubtitle(link.subtitle ?? "");
-    setUrl(link.url);
+    setUrl(link.url ?? "");
     setSaveError("");
     setEditing(false);
   }
