@@ -117,21 +117,10 @@ export default async function ProfilePage({
             style={{
               width: "100%",
               listStyle: "none",
-              position: "relative",
+              borderLeft: "2px solid var(--accent)",
               paddingLeft: 0,
             }}
           >
-            {/* Left rail */}
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: "15px",
-                bottom: "15px",
-                width: "2px",
-                backgroundColor: "var(--accent)",
-              }}
-            />
             {links.map((link) => (
               <li key={link.id}>
                 <a

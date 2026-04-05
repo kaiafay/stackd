@@ -9,6 +9,7 @@ import EditProfile from "@/components/dashboard/EditProfile";
 import { useRouter } from "next/navigation";
 import type { Profile, Theme } from "@/types";
 import { inputStyle, sectionLabelStyle } from "@/styles/shared";
+import { isReserved, normalizeUsername } from "@/lib/username";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -109,17 +110,22 @@ export default function DashboardPage() {
       }
       return;
     }
+    const normalized = normalizeUsername(username);
     setUnError("");
     unEmptyWarned.current = false;
+    if (isReserved(normalized)) {
+      setUnError("that username is reserved");
+      return;
+    }
     const { error } = await supabase
       .from("profiles")
-      .update({ username })
+      .update({ username: normalized })
       .eq("id", profile!.id);
     if (error) {
       setUnError(error.code === "23505" ? "that username is already taken" : error.message);
     } else {
       setEditingUsername(false);
-      setProfile((prev) => (prev ? { ...prev, username } : prev));
+      setProfile((prev) => (prev ? { ...prev, username: normalized } : prev));
       setUnSaved(true);
       if (unSavedTimer.current) clearTimeout(unSavedTimer.current);
       unSavedTimer.current = setTimeout(() => setUnSaved(false), 2000);

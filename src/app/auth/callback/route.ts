@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { isReserved } from "@/lib/username";
 
 function deriveUsername(email: string): string {
   const base = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
-  return base.slice(0, 30);
+  const sliced = base.slice(0, 30);
+  return isReserved(sliced) ? `${base.slice(0, 29)}0` : sliced;
 }
 
 export async function GET(request: Request) {
