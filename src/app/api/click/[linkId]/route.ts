@@ -8,14 +8,17 @@ export async function GET(
   const { linkId } = await params;
   const supabase = await createClient();
 
-  // Select only the URL — click_count is no longer read in application code.
   const { data: link } = await supabase
     .from("links")
-    .select("url")
+    .select("url, kind")
     .eq("id", linkId)
     .single();
 
   if (!link) redirect("/");
+
+  if (link.kind === "section" || !link.url) {
+    return new Response("Bad Request", { status: 400 });
+  }
 
   // Atomic server-side increment — no read-modify-write race.
   // Requires a Supabase function:

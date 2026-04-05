@@ -15,8 +15,9 @@ export type Link = {
   profile_id: string;
   title: string;
   subtitle: string | null;
-  url: string;
+  url: string | null;
   order_index: number;
   enabled: boolean;
   click_count: number;
+  kind: "link" | "section";
 };

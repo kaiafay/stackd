@@ -22,7 +22,7 @@ export default async function ProfilePage({
     .from("links")
     .select("*")
     .eq("profile_id", profile.id)
-    .eq("enabled", true)
+    .or("enabled.eq.true,kind.eq.section")
     .order("order_index");
 
   const themeAttr = profile.theme === "default" ? "" : profile.theme;
@@ -121,43 +121,58 @@ export default async function ProfilePage({
               paddingLeft: 0,
             }}
           >
-            {links.map((link) => (
-              <li key={link.id}>
-                <a
-                  href={`/api/click/${link.id}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "15px 0 15px 14px",
-                    textDecoration: "none",
-                    color: "var(--text)",
-                    width: "100%",
-                  }}
-                >
-                  <span>
-                    <span style={{ display: "block", fontSize: "14px", fontWeight: 500 }}>
-                      {link.title}
-                    </span>
-                    {link.subtitle && (
-                      <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                        {link.subtitle}
-                      </span>
-                    )}
-                  </span>
-                  <span
+            {links.map((link) =>
+              link.kind === "section" ? (
+                <li key={link.id}>
+                  <div
                     style={{
-                      fontSize: "14px",
-                      color: "var(--accent)",
-                      flexShrink: 0,
-                      marginLeft: "12px",
+                      fontSize: "18px",
+                      fontWeight: 700,
+                      color: "var(--text)",
+                      padding: "20px 0 8px 14px",
                     }}
                   >
-                    →
-                  </span>
-                </a>
-              </li>
-            ))}
+                    {link.title}
+                  </div>
+                </li>
+              ) : link.url?.trim() ? (
+                <li key={link.id}>
+                  <a
+                    href={`/api/click/${link.id}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "15px 0 15px 14px",
+                      textDecoration: "none",
+                      color: "var(--text)",
+                      width: "100%",
+                    }}
+                  >
+                    <span>
+                      <span style={{ display: "block", fontSize: "14px", fontWeight: 500 }}>
+                        {link.title}
+                      </span>
+                      {link.subtitle && (
+                        <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                          {link.subtitle}
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        color: "var(--accent)",
+                        flexShrink: 0,
+                        marginLeft: "12px",
+                      }}
+                    >
+                      →
+                    </span>
+                  </a>
+                </li>
+              ) : null,
+            )}
           </ul>
         ) : (
           <p
