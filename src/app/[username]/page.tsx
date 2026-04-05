@@ -135,8 +135,15 @@ export default async function ProfilePage({
                     width: "100%",
                   }}
                 >
-                  <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                    {link.title}
+                  <span>
+                    <span style={{ display: "block", fontSize: "14px", fontWeight: 500 }}>
+                      {link.title}
+                    </span>
+                    {link.subtitle && (
+                      <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                        {link.subtitle}
+                      </span>
+                    )}
                   </span>
                   <span
                     style={{

@@ -8,7 +8,7 @@ type Props = {
   link: Link;
   onUpdate: (
     id: string,
-    updates: Partial<Pick<Link, "title" | "url" | "enabled">>,
+    updates: Partial<Pick<Link, "title" | "subtitle" | "url" | "enabled">>,
   ) => Promise<{ error: { message: string } | null }>;
   onDelete: (id: string) => Promise<{ error: { message: string } | null }>;
   dragHandleProps?: React.HTMLAttributes<HTMLSpanElement>;
@@ -22,18 +22,20 @@ export default function LinkItem({
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(link.title);
+  const [subtitle, setSubtitle] = useState(link.subtitle ?? "");
   const [url, setUrl] = useState(link.url);
   const [saveError, setSaveError] = useState("");
 
   function openEdit() {
     setTitle(link.title);
+    setSubtitle(link.subtitle ?? "");
     setUrl(link.url);
     setEditing(true);
   }
 
   async function handleSave() {
     setSaveError("");
-    const { error } = await onUpdate(link.id, { title, url });
+    const { error } = await onUpdate(link.id, { title, subtitle: subtitle || null, url });
     if (error) {
       setSaveError(
         error.message.toLowerCase().includes("fetch")
@@ -47,6 +49,7 @@ export default function LinkItem({
 
   function handleCancel() {
     setTitle(link.title);
+    setSubtitle(link.subtitle ?? "");
     setUrl(link.url);
     setSaveError("");
     setEditing(false);
@@ -82,17 +85,34 @@ export default function LinkItem({
         >
           ⠿
         </span>
-        <span
-          style={{
-            flex: 1,
-            fontSize: "14px",
-            fontWeight: 500,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {link.title}
+        <span style={{ flex: 1, overflow: "hidden" }}>
+          <span
+            style={{
+              display: "block",
+              fontSize: "14px",
+              fontWeight: 500,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {link.title}
+          </span>
+          {link.subtitle && (
+            <span
+              style={{
+                display: "block",
+                fontSize: "11px",
+                color: "var(--muted)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                marginTop: "2px",
+              }}
+            >
+              {link.subtitle}
+            </span>
+          )}
         </span>
         {!editing && (
           <>
@@ -143,6 +163,13 @@ export default function LinkItem({
             placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+          />
+          <input
+            style={inputStyle}
+            type="text"
+            placeholder="subtitle (optional)"
+            value={subtitle}
+            onChange={(e) => setSubtitle(e.target.value)}
           />
           <input
             style={inputStyle}

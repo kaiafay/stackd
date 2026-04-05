@@ -48,7 +48,7 @@ export function useLinks(profileId: string) {
 
   async function updateLink(
     id: string,
-    updates: Partial<Pick<Link, "title" | "url" | "enabled">>,
+    updates: Partial<Pick<Link, "title" | "subtitle" | "url" | "enabled">>,
   ): Promise<{ error: { message: string } | null }> {
     const normalized = updates.url
       ? { ...updates, url: normalizeUrl(updates.url) }

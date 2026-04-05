@@ -14,6 +14,7 @@ export type Link = {
   id: string;
   profile_id: string;
   title: string;
+  subtitle: string | null;
   url: string;
   order_index: number;
   enabled: boolean;
