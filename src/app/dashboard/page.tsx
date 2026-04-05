@@ -63,6 +63,9 @@ export default function DashboardPage() {
       }
     }
     fetchProfile();
+    return () => {
+      document.documentElement.removeAttribute("data-theme");
+    };
   }, []);
 
   async function handleThemeChange(newTheme: Theme) {
