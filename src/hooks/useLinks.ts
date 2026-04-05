@@ -86,7 +86,7 @@ export function useLinks(profileId: string) {
     setLinks(reordered);
     const { error } = await supabase
       .from("links")
-      .upsert(reordered.map((l, i) => ({ id: l.id, order_index: i })));
+      .upsert(reordered.map((l, i) => ({ ...l, order_index: i })));
     if (error) setLinks(previous);
   }
 
