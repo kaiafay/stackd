@@ -2,15 +2,17 @@
 
 import { useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/types";
+import type { Profile, Link } from "@/types";
 import { inputStyle, sectionLabelStyle } from "@/styles/shared";
+import SocialIconRow from "@/components/SocialIconRow";
 
 type Props = {
   profile: Profile;
   onSave: (updated: Partial<Profile>) => void;
+  links?: Link[];
 };
 
-export default function EditProfile({ profile, onSave }: Props) {
+export default function EditProfile({ profile, onSave, links }: Props) {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
@@ -309,6 +311,9 @@ export default function EditProfile({ profile, onSave }: Props) {
         </div>
       </div>
       </div>
+      {profile.show_social_icons && links && (
+        <SocialIconRow links={links} interactive={false} style={{ paddingTop: "12px" }} />
+      )}
       {avatarError && (
         <p style={{ fontSize: "11px", color: "var(--error)" }}>
           {avatarError}

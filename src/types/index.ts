@@ -6,6 +6,7 @@ export type Profile = {
   bio: string | null;
   theme: string;
   avatar_url: string | null;
+  show_social_icons: boolean;
 };
 
 export type Theme = "default" | "retro" | "noir" | "soft" | "terminal";

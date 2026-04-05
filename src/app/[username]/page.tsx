@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import SocialIconRow from "@/components/SocialIconRow";
 
 export default async function ProfilePage({
   params,
@@ -93,23 +94,34 @@ export default async function ProfilePage({
           {profile.display_name ?? profile.username}
         </h1>
 
-        {/* Bio */}
-        {profile.bio && (
-          <p
-            style={{
-              fontSize: "13px",
-              color: "var(--muted)",
-              textAlign: "center",
-              lineHeight: 1.5,
-              marginBottom: "32px",
-              maxWidth: "280px",
-            }}
-          >
-            {profile.bio}
-          </p>
-        )}
-
-        {!profile.bio && <div style={{ marginBottom: "32px" }} />}
+        {/* Bio + social icon row */}
+        <div
+          style={{
+            marginBottom: "32px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "16px",
+          }}
+        >
+          {profile.bio && (
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--muted)",
+                textAlign: "center",
+                lineHeight: 1.5,
+                maxWidth: "280px",
+                margin: 0,
+              }}
+            >
+              {profile.bio}
+            </p>
+          )}
+          {profile.show_social_icons && links && (
+            <SocialIconRow links={links} />
+          )}
+        </div>
 
         {/* Links */}
         {links && links.length > 0 ? (
