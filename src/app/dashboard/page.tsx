@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showSpinner, setShowSpinner] = useState(false);
   const [theme, setTheme] = useState<Theme>("default");
+  const [showSocialIcons, setShowSocialIcons] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [adding, setAdding] = useState(false);
@@ -58,6 +59,7 @@ export default function DashboardPage() {
       if (data) {
         setProfile(data);
         setTheme((data.theme as Theme) ?? "default");
+        setShowSocialIcons(data.show_social_icons ?? false);
         document.documentElement.setAttribute(
           "data-theme",
           data.theme === "default" ? "" : data.theme,
@@ -80,6 +82,18 @@ export default function DashboardPage() {
       await supabase
         .from("profiles")
         .update({ theme: newTheme })
+        .eq("id", profile.id);
+    }
+  }
+
+  async function handleToggleSocialIcons() {
+    const next = !showSocialIcons;
+    setShowSocialIcons(next);
+    setProfile((prev) => prev ? { ...prev, show_social_icons: next } : prev);
+    if (profile) {
+      await supabase
+        .from("profiles")
+        .update({ show_social_icons: next })
         .eq("id", profile.id);
     }
   }
@@ -249,6 +263,7 @@ export default function DashboardPage() {
         onSave={(updated) =>
           setProfile((prev) => (prev ? { ...prev, ...updated } : prev))
         }
+        links={links}
       />
 
       {/* Links section */}
@@ -494,6 +509,63 @@ export default function DashboardPage() {
             {unError}
           </p>
         )}
+
+        {/* Social icons toggle */}
+        <div style={{ marginTop: "20px" }}>
+          <div
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.8px",
+              textTransform: "uppercase",
+              color: "var(--muted)",
+              marginBottom: "8px",
+            }}
+          >
+            Social icons
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              role="switch"
+              aria-checked={showSocialIcons}
+              onClick={handleToggleSocialIcons}
+              style={{
+                position: "relative",
+                width: "36px",
+                height: "20px",
+                borderRadius: "10px",
+                backgroundColor: showSocialIcons ? "var(--accent)" : "var(--divider)",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                flexShrink: 0,
+                transition: "background-color 0.2s",
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: "2px",
+                  left: showSocialIcons ? "18px" : "2px",
+                  width: "16px",
+                  height: "16px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--bg)",
+                  transition: "left 0.2s",
+                  display: "block",
+                }}
+              />
+            </button>
+            <div>
+              <div style={{ fontSize: "13px", color: "var(--text)", fontFamily: "Metropolis, sans-serif" }}>
+                Show social icons
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                Auto-detected from your links
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );
