@@ -59,6 +59,7 @@ export default function SectionHeader({
       >
         <span
           {...dragHandleProps}
+          aria-label="Drag to reorder"
           onClick={(e) => e.stopPropagation()}
           style={{
             color: "var(--muted)",
@@ -100,6 +101,7 @@ export default function SectionHeader({
           </span>
         )}
         <button
+          aria-label="Delete section"
           onClick={handleDelete}
           style={{
             fontSize: "13px",

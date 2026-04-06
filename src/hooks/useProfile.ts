@@ -29,17 +29,23 @@ export function useProfile(onUnauthenticated: () => void) {
 
   useEffect(() => {
     async function fetchProfile(userId: string) {
-      const data = await fetchProfileByUserId(supabase, userId);
-      if (data) {
-        setProfileError(false);
-        setProfile(data);
-        const t: Theme = isValidTheme(data.theme) ? data.theme : "default";
-        setTheme(t);
-        setShowSocialIcons(data.show_social_icons ?? false);
-        applyTheme(t);
-      } else {
-        // Authenticated but no profile row — something went wrong during
-        // account creation. Surface an error rather than spinning forever.
+      try {
+        const data = await fetchProfileByUserId(supabase, userId);
+        if (data) {
+          setProfileError(false);
+          setProfile(data);
+          const t: Theme = isValidTheme(data.theme) ? data.theme : "default";
+          setTheme(t);
+          setShowSocialIcons(data.show_social_icons ?? false);
+          applyTheme(t);
+        } else {
+          // Authenticated but no profile row — something went wrong during
+          // account creation. Surface an error rather than spinning forever.
+          setProfileError(true);
+        }
+      } catch {
+        // Real DB / network error — surface the same error state so the
+        // user sees a message rather than an infinite spinner.
         setProfileError(true);
       }
     }

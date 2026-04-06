@@ -158,37 +158,45 @@ export default function AccountSection({
           Social icons
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button
-            role="switch"
-            aria-checked={showSocialIcons}
-            onClick={onToggleSocialIcons}
+          <label
             style={{
               position: "relative",
               width: "36px",
               height: "20px",
-              borderRadius: "10px",
-              backgroundColor: showSocialIcons ? "var(--accent)" : "var(--divider)",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
               flexShrink: 0,
-              transition: "background-color 0.2s",
+              cursor: "pointer",
             }}
           >
+            <input
+              type="checkbox"
+              checked={showSocialIcons}
+              onChange={() => onToggleSocialIcons()}
+              style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+            />
             <span
               style={{
                 position: "absolute",
-                top: "2px",
-                left: showSocialIcons ? "18px" : "2px",
-                width: "16px",
-                height: "16px",
-                borderRadius: "50%",
-                backgroundColor: "var(--bg)",
-                transition: "left 0.2s",
-                display: "block",
+                inset: 0,
+                borderRadius: "10px",
+                backgroundColor: showSocialIcons ? "var(--accent)" : "var(--divider)",
+                transition: "background-color 0.2s",
               }}
-            />
-          </button>
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: "2px",
+                  left: showSocialIcons ? "18px" : "2px",
+                  width: "16px",
+                  height: "16px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--bg)",
+                  transition: "left 0.2s",
+                  display: "block",
+                }}
+              />
+            </span>
+          </label>
           <div>
             <div
               style={{
