@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchProfileByUserId } from "@/lib/db/profiles";
 import type { Profile, Theme } from "@/types";
 
 function applyTheme(theme: Theme) {
@@ -14,6 +15,7 @@ function applyTheme(theme: Theme) {
 export function useProfile(onUnauthenticated: () => void) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showSpinner, setShowSpinner] = useState(false);
+  const [profileError, setProfileError] = useState(false);
   const [theme, setTheme] = useState<Theme>("default");
   const [showSocialIcons, setShowSocialIcons] = useState(false);
   const supabaseRef = useRef(createClient());
@@ -26,19 +28,17 @@ export function useProfile(onUnauthenticated: () => void) {
 
   useEffect(() => {
     async function fetchProfile(userId: string) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      // Defense-in-depth: verify the returned row belongs to this user.
-      if (data && data.user_id === userId) {
+      const data = await fetchProfileByUserId(supabase, userId);
+      if (data) {
         setProfile(data);
         const t = (data.theme as Theme) ?? "default";
         setTheme(t);
         setShowSocialIcons(data.show_social_icons ?? false);
         applyTheme(t);
+      } else {
+        // Authenticated but no profile row — something went wrong during
+        // account creation. Surface an error rather than spinning forever.
+        setProfileError(true);
       }
     }
 
@@ -110,6 +110,7 @@ export function useProfile(onUnauthenticated: () => void) {
     profile,
     setProfile,
     showSpinner,
+    profileError,
     theme,
     showSocialIcons,
     handleThemeChange,

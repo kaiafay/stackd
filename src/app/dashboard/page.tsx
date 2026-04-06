@@ -16,6 +16,7 @@ export default function DashboardPage() {
     profile,
     setProfile,
     showSpinner,
+    profileError,
     theme,
     showSocialIcons,
     handleThemeChange,
@@ -36,6 +37,24 @@ export default function DashboardPage() {
     setNewTitle("");
     setNewUrl("");
     setAdding(false);
+  }
+
+  if (profileError) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "var(--bg)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <p style={{ fontSize: "13px", color: "var(--muted)", textAlign: "center" }}>
+          Your profile could not be loaded. Please sign out and try again.
+        </p>
+      </main>
+    );
   }
 
   if (!profile) {

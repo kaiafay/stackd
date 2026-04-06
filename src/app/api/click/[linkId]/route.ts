@@ -41,5 +41,6 @@ export async function GET(
 
   // redirect() throws internally in Next.js, so the update above must be
   // awaited before this line — not after.
-  redirect(link.url);
+  // Use parsedUrl.href (the canonicalized form) rather than the raw DB value.
+  redirect(parsedUrl.href);
 }
