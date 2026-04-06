@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { fetchProfileByUserId } from "@/lib/db/profiles";
+import { isValidTheme } from "@/types";
 import type { Profile, Theme } from "@/types";
 
 function applyTheme(theme: Theme) {
@@ -30,8 +31,9 @@ export function useProfile(onUnauthenticated: () => void) {
     async function fetchProfile(userId: string) {
       const data = await fetchProfileByUserId(supabase, userId);
       if (data) {
+        setProfileError(false);
         setProfile(data);
-        const t = (data.theme as Theme) ?? "default";
+        const t: Theme = isValidTheme(data.theme) ? data.theme : "default";
         setTheme(t);
         setShowSocialIcons(data.show_social_icons ?? false);
         applyTheme(t);
