@@ -56,7 +56,9 @@ export default function DashboardPage() {
         .eq("user_id", user.id)
         .single();
 
-      if (data) {
+      // Defense-in-depth: verify the returned row actually belongs to this user
+      // even if RLS is misconfigured and returned a different row.
+      if (data && data.user_id === user.id) {
         setProfile(data);
         setTheme((data.theme as Theme) ?? "default");
         setShowSocialIcons(data.show_social_icons ?? false);
@@ -137,7 +139,7 @@ export default function DashboardPage() {
       .update({ username: normalized })
       .eq("id", profile!.id);
     if (error) {
-      setUnError(error.code === "23505" ? "that username is already taken" : error.message);
+      setUnError(error.code === "23505" ? "that username is already taken" : "couldn't save username — try again");
     } else {
       setEditingUsername(false);
       setProfile((prev) => (prev ? { ...prev, username: normalized } : prev));
