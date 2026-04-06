@@ -48,12 +48,24 @@ export default function EditProfile({ profile, onSave, links }: Props) {
       setUploading(false);
       return;
     }
+    // Validate MIME type against an explicit allowlist — do not trust file.name extension
+    const ALLOWED_MIME_TYPES: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+    };
+    const fileExt = ALLOWED_MIME_TYPES[file.type];
+    if (!fileExt) {
+      setAvatarError("Only JPEG, PNG, and WebP images are allowed.");
+      setUploading(false);
+      return;
+    }
+
     // Capture old path before any mutations so we can clean up after success
     const oldPath = profile.avatar_url
       ? profile.avatar_url.split("/avatars/")[1]?.split("?")[0] ?? null
       : null;
 
-    const fileExt = file.name.split(".").pop();
     const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
 
     // 1. Upload new file
