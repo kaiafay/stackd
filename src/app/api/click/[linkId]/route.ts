@@ -20,6 +20,17 @@ export async function GET(
     return new Response("Bad Request", { status: 400 });
   }
 
+  // Only allow safe http/https URLs — reject javascript:, data:, etc.
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(link.url);
+  } catch {
+    return new Response("Bad Request", { status: 400 });
+  }
+  if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+    return new Response("Bad Request", { status: 400 });
+  }
+
   // Atomic server-side increment — no read-modify-write race.
   // Requires a Supabase function:
   //   create or replace function increment_link_click(link_id uuid)
@@ -30,5 +41,6 @@ export async function GET(
 
   // redirect() throws internally in Next.js, so the update above must be
   // awaited before this line — not after.
-  redirect(link.url);
+  // Use parsedUrl.href (the canonicalized form) rather than the raw DB value.
+  redirect(parsedUrl.href);
 }

@@ -1,7 +1,16 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { fetchProfileByUsername } from "@/lib/db/profiles";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import SocialIconRow from "@/components/SocialIconRow";
+
+// Cached per-request so multiple RSC passes with the same username don't
+// issue duplicate DB round-trips.
+const getProfile = cache(async (username: string) => {
+  const supabase = await createClient();
+  return fetchProfileByUsername(supabase, username);
+});
 
 export default async function ProfilePage({
   params,
@@ -11,12 +20,7 @@ export default async function ProfilePage({
   const { username } = await params;
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("username", username)
-    .single();
-
+  const profile = await getProfile(username);
   if (!profile) notFound();
 
   const { data: links } = await supabase

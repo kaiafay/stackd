@@ -79,6 +79,7 @@ export default function LinkItem({
       <div style={rowStyle} onClick={() => editing ? handleCancel() : openEdit()}>
         <span
           {...dragHandleProps}
+          aria-label="Drag to reorder"
           onClick={(e) => e.stopPropagation()}
           style={{
             color: "var(--muted)",
@@ -146,6 +147,7 @@ export default function LinkItem({
           </>
         )}
         <span
+          aria-hidden="true"
           style={{ fontSize: "13px", color: "var(--muted)", flexShrink: 0 }}
         >
           ✎

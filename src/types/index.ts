@@ -9,7 +9,13 @@ export type Profile = {
   show_social_icons: boolean;
 };
 
-export type Theme = "default" | "retro" | "noir" | "soft" | "terminal";
+export const THEMES = ["default", "retro", "noir", "soft", "terminal"] as const;
+export type Theme = (typeof THEMES)[number];
+
+/** Runtime guard — use instead of `as Theme` when the value comes from the DB. */
+export function isValidTheme(value: unknown): value is Theme {
+  return typeof value === "string" && (THEMES as readonly string[]).includes(value);
+}
 
 export type Link = {
   id: string;
