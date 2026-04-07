@@ -15,14 +15,16 @@ export default function DashboardPage() {
   const {
     profile,
     setProfile,
-    showSpinner,
     profileError,
     theme,
     showSocialIcons,
     handleThemeChange,
     handleToggleSocialIcons,
   } = useProfile({
-    onUnauthenticated: () => router.push("/login"),
+    onUnauthenticated: () => {
+      document.documentElement.removeAttribute("data-theme");
+      router.push("/login");
+    },
     onMissingProfile: () => router.push("/onboarding"),
   });
 
@@ -60,42 +62,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!profile) {
-    if (!showSpinner) return null;
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "var(--bg)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "12px",
-          }}
-        >
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              border: "2px solid var(--divider)",
-              borderTopColor: "var(--accent)",
-              animation: "spin 0.8s linear infinite",
-            }}
-          />
-          <span style={{ fontSize: "12px", color: "var(--muted)" }}>Loading…</span>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </main>
-    );
-  }
+  if (!profile) return null;
 
   const sectionLabel = { ...sectionLabelStyle, marginBottom: "12px" } as React.CSSProperties;
   const formInputStyle = { ...inputStyle, backgroundColor: "var(--surface)", marginBottom: "8px" } as React.CSSProperties;
@@ -154,6 +121,7 @@ export default function DashboardPage() {
             onClick={async () => {
               const { createClient } = await import("@/lib/supabase/client");
               await createClient().auth.signOut();
+              document.documentElement.removeAttribute("data-theme");
               router.push("/login");
             }}
             style={{

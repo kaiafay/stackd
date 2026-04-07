@@ -7,10 +7,12 @@ import { isValidTheme } from "@/types";
 import type { Profile, Theme } from "@/types";
 
 function applyTheme(theme: Theme) {
-  document.documentElement.setAttribute(
-    "data-theme",
-    theme === "default" ? "" : theme,
-  );
+  if (theme === "default") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", theme);
+  }
+  localStorage.setItem("stackd-theme", theme);
 }
 
 export type UseProfileOptions = {
@@ -27,17 +29,11 @@ export function useProfile({
   onUnauthenticatedRef.current = onUnauthenticated;
   onMissingProfileRef.current = onMissingProfile;
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [showSpinner, setShowSpinner] = useState(false);
   const [profileError, setProfileError] = useState(false);
   const [theme, setTheme] = useState<Theme>("default");
   const [showSocialIcons, setShowSocialIcons] = useState(false);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowSpinner(true), 200);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     async function fetchProfile(userId: string) {
@@ -83,7 +79,6 @@ export function useProfile({
 
     return () => {
       subscription.unsubscribe();
-      document.documentElement.removeAttribute("data-theme");
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -127,7 +122,6 @@ export function useProfile({
   return {
     profile,
     setProfile,
-    showSpinner,
     profileError,
     theme,
     showSocialIcons,

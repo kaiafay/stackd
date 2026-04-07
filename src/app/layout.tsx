@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NON_DEFAULT_THEMES } from "@/types";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,7 +27,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(!window.location.pathname.startsWith('/dashboard'))return;var t=localStorage.getItem('stackd-theme');if(t&&${JSON.stringify(NON_DEFAULT_THEMES)}.indexOf(t)!==-1)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();` }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

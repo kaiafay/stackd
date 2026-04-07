@@ -11,6 +11,7 @@ export type Profile = {
 
 export const THEMES = ["default", "retro", "noir", "soft", "terminal"] as const;
 export type Theme = (typeof THEMES)[number];
+export const NON_DEFAULT_THEMES = THEMES.filter((t) => t !== "default");
 
 /** Runtime guard — use instead of `as Theme` when the value comes from the DB. */
 export function isValidTheme(value: unknown): value is Theme {
