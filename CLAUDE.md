@@ -28,13 +28,23 @@ No test suite is configured.
 | Route | Type | Purpose |
 |---|---|---|
 | `/` | Server | Redirects to `/dashboard` (authed) or `/login` |
-| `/login` | Client | Supabase email OTP magic link |
-| `/auth/callback` | Server | Exchanges OAuth code, creates profile on first login |
+| `/login` | Client | Google OAuth, email/password sign-in, sign-up, and magic link |
+| `/auth/callback` | Server | Exchanges PKCE code (magic link, Google, password confirm); redirects to `/onboarding` if no profile, `/dashboard` if profile exists |
+| `/onboarding` | Client | Protected; new users choose a public username and create their profile |
 | `/dashboard` | Client | Protected link/profile editor |
 | `/[username]` | Server | Public profile (SSR) |
 | `/api/click/[linkId]` | API Route | Increments `click_count`, redirects to URL |
 
-`middleware.ts` guards `/dashboard/*` — unauthenticated requests redirect to `/login`.
+`middleware.ts` guards `/dashboard/*` and `/onboarding/*` — unauthenticated requests redirect to `/login`.
+
+### Auth flows
+All three entry points converge on the same onboarding path for new users:
+- **Google OAuth** — `signInWithOAuth` → Supabase → `/auth/callback` → `/onboarding` (new) or `/dashboard` (returning)
+- **Magic link** — `signInWithOtp` → email → `/auth/callback` → same
+- **Password sign-up** — `signUp`; if email confirmation is enabled, confirmation link → `/auth/callback` → `/onboarding`; if disabled, immediate session → client redirects to `/onboarding`
+- **Password sign-in** — `signInWithPassword` → client redirects to `/dashboard`; `useProfile` redirects to `/onboarding` if no profile row exists
+
+Profile rows are **never** created in `/auth/callback`. The `/onboarding` page calls `insertProfileForNewUser` (`src/lib/create-initial-profile.ts`) once the user submits a username.
 
 ### Supabase client split
 - `src/lib/supabase/client.ts` — browser context (`createBrowserClient`)
@@ -43,7 +53,7 @@ No test suite is configured.
 Always use the correct client for the rendering context.
 
 ### Database tables (inferred)
-- **`profiles`**: `id`, `user_id`, `username`, `display_name`, `bio`, `theme`, `avatar_url`
+- **`profiles`**: `id`, `user_id`, `username`, `display_name`, `bio`, `theme`, `avatar_url`, `show_social_icons`
 - **`links`**: `id`, `profile_id`, `title`, `url`, `order_index`, `enabled`, `click_count`
 - **`avatars`** storage bucket: public, for user avatar images
 
@@ -62,7 +72,9 @@ Five presets (`default`, `retro`, `noir`, `soft`, `terminal`) defined as CSS cus
 `@/*` maps to `./src/*` (configured in `tsconfig.json`).
 
 ### Environment variables
+See `.env.example` for the full list. Required at minimum:
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SITE_URL=        # must match Supabase Auth redirect allowlist
 ```
