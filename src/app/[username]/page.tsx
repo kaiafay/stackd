@@ -2,8 +2,11 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { fetchProfileByUsername } from "@/lib/db/profiles";
 import { notFound } from "next/navigation";
+import { type Metadata } from "next";
+import { getProfileUrl } from "@/lib/site-url";
 import Link from "next/link";
 import SocialIconRow from "@/components/SocialIconRow";
+import ProfileShareButton from "@/components/ProfileShareButton";
 
 // Cached per-request so multiple RSC passes with the same username don't
 // issue duplicate DB round-trips.
@@ -11,6 +14,37 @@ const getProfile = cache(async (username: string) => {
   const supabase = await createClient();
   return fetchProfileByUsername(supabase, username);
 });
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  const profile = await getProfile(username);
+  if (!profile) return {};
+
+  const url = getProfileUrl(profile.username);
+  const name = profile.display_name ?? profile.username;
+  const description = profile.bio ?? `${name}'s links on Stackd`;
+
+  return {
+    title: name,
+    description,
+    openGraph: {
+      title: name,
+      description,
+      url,
+      ...(profile.avatar_url ? { images: [{ url: profile.avatar_url }] } : {}),
+    },
+    twitter: {
+      card: "summary",
+      title: name,
+      description,
+      ...(profile.avatar_url ? { images: [profile.avatar_url] } : {}),
+    },
+  };
+}
 
 export default async function ProfilePage({
   params,
@@ -31,6 +65,7 @@ export default async function ProfilePage({
     .order("order_index");
 
   const themeAttr = profile.theme === "default" ? "" : profile.theme;
+  const shareUrl = getProfileUrl(profile.username);
 
   return (
     <main
@@ -125,6 +160,10 @@ export default async function ProfilePage({
           {profile.show_social_icons && links && (
             <SocialIconRow links={links} />
           )}
+          <ProfileShareButton
+            shareUrl={shareUrl}
+            displayName={profile.display_name ?? profile.username}
+          />
         </div>
 
         {/* Links */}
