@@ -37,7 +37,7 @@ function isRateLimited(ip: string): boolean {
 const PROFILE_ROUTE_RE = /^\/[a-zA-Z0-9]+$/;
 
 // Known single-segment app routes that are not profile pages.
-const NON_PROFILE_ROUTES = new Set(["/login", "/dashboard"]);
+const NON_PROFILE_ROUTES = new Set(["/login", "/dashboard", "/onboarding"]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -67,9 +67,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Only run the Supabase session refresh and auth guard for dashboard routes —
+  // Only run the Supabase session refresh and auth guard for protected app routes —
   // avoids the getUser() round-trip overhead on public pages.
-  if (!pathname.startsWith("/dashboard")) {
+  const isProtectedAppRoute =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding");
+  if (!isProtectedAppRoute) {
     return NextResponse.next({ request });
   }
 
@@ -104,5 +106,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/((?!_next|api|favicon.ico).+)"],
+  matcher: [
+    "/dashboard/:path*",
+    "/onboarding/:path*",
+    "/((?!_next|api|favicon.ico).+)",
+  ],
 };

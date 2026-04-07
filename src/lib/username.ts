@@ -3,7 +3,7 @@ export function normalizeUsername(value: string): string {
 }
 
 const RAW_RESERVED = [
-  "login", "logout", "dashboard", "api", "auth", "admin",
+  "login", "logout", "dashboard", "onboarding", "api", "auth", "admin",
   "settings", "profile", "404", "notfound",
 ];
 

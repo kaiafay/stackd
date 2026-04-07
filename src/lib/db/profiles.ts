@@ -49,6 +49,9 @@ export async function fetchProfileByUserId(
     if (error.code === PGRST_NO_ROWS) return null;
     throw new Error(error.message);
   }
-  if (!data || data.user_id !== userId) return null;
+  if (!data) return null;
+  if (data.user_id !== userId) {
+    throw new Error("Profile ownership mismatch");
+  }
   return data as Profile;
 }
