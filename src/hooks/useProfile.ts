@@ -13,7 +13,19 @@ function applyTheme(theme: Theme) {
   );
 }
 
-export function useProfile(onUnauthenticated: () => void) {
+export type UseProfileOptions = {
+  onUnauthenticated: () => void;
+  onMissingProfile: () => void;
+};
+
+export function useProfile({
+  onUnauthenticated,
+  onMissingProfile,
+}: UseProfileOptions) {
+  const onUnauthenticatedRef = useRef(onUnauthenticated);
+  const onMissingProfileRef = useRef(onMissingProfile);
+  onUnauthenticatedRef.current = onUnauthenticated;
+  onMissingProfileRef.current = onMissingProfile;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showSpinner, setShowSpinner] = useState(false);
   const [profileError, setProfileError] = useState(false);
@@ -39,9 +51,7 @@ export function useProfile(onUnauthenticated: () => void) {
           setShowSocialIcons(data.show_social_icons ?? false);
           applyTheme(t);
         } else {
-          // Authenticated but no profile row — something went wrong during
-          // account creation. Surface an error rather than spinning forever.
-          setProfileError(true);
+          onMissingProfileRef.current();
         }
       } catch {
         // Real DB / network error — surface the same error state so the
@@ -53,7 +63,7 @@ export function useProfile(onUnauthenticated: () => void) {
     // Initial auth check.
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
-        onUnauthenticated();
+        onUnauthenticatedRef.current();
       } else {
         fetchProfile(user.id);
       }
@@ -65,7 +75,7 @@ export function useProfile(onUnauthenticated: () => void) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session?.user) {
         setProfile(null);
-        onUnauthenticated();
+        onUnauthenticatedRef.current();
       } else if (event === "SIGNED_IN" && session.user) {
         fetchProfile(session.user.id);
       }

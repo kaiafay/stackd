@@ -21,7 +21,10 @@ export default function DashboardPage() {
     showSocialIcons,
     handleThemeChange,
     handleToggleSocialIcons,
-  } = useProfile(() => router.push("/login"));
+  } = useProfile({
+    onUnauthenticated: () => router.push("/login"),
+    onMissingProfile: () => router.push("/onboarding"),
+  });
 
   const [newTitle, setNewTitle] = useState("");
   const [newUrl, setNewUrl] = useState("");

@@ -1,12 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { isReserved } from "@/lib/username";
-
-function deriveUsername(email: string): string {
-  const base = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
-  const sliced = base.slice(0, 30);
-  return isReserved(sliced) ? `${base.slice(0, 29)}0` : sliced;
-}
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -31,39 +24,18 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // Check if profile exists, create one if not
+      if (!data.user.email) {
+        return NextResponse.redirect(`${origin}/login?error=auth`);
+      }
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
         .eq("user_id", data.user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile) {
-        if (!data.user.email) {
-          return NextResponse.redirect(`${origin}/login?error=auth`);
-        }
-        const username = deriveUsername(data.user.email);
-        const { error: insertError } = await supabase.from("profiles").insert({
-          user_id: data.user.id,
-          username,
-          display_name: username,
-          theme: "default",
-        });
-
-        if (insertError) {
-          console.error("[auth/callback] profile insert failed, retrying with suffix:", insertError.message);
-          const suffixedUsername = `${username.slice(0, 22)}${data.user.id.slice(0, 8)}`;
-          const { error: retryError } = await supabase.from("profiles").insert({
-            user_id: data.user.id,
-            username: suffixedUsername,
-            display_name: suffixedUsername,
-            theme: "default",
-          });
-          if (retryError) {
-            console.error("[auth/callback] profile insert retry failed:", retryError.message);
-            return NextResponse.redirect(`${origin}/login?error=profile_creation_failed`);
-          }
-        }
+        return NextResponse.redirect(`${origin}/onboarding`);
       }
 
       return NextResponse.redirect(`${origin}/dashboard`);
