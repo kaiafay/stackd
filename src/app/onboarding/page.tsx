@@ -195,7 +195,9 @@ export default function OnboardingPage() {
           spellCheck={false}
           value={username}
           onChange={(e) => handleUsernameChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !loading && handleSubmit()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !loading) void handleSubmit();
+          }}
           disabled={loading}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "onboarding-username-error" : undefined}

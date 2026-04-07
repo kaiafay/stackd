@@ -1,15 +1,38 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getBrowserSiteOrigin } from "@/lib/site-url";
+
+const MIN_PASSWORD_LENGTH = 8;
 
 const URL_ERROR_MESSAGES: Record<string, string> = {
   profile_creation_failed: "We had trouble setting up your account. Please try signing in again.",
   auth: "Something went wrong signing you in. Please try again.",
   oauth: "Sign-in was cancelled or failed. Please try again.",
 };
+
+/** Friendly copy for common Supabase Auth error strings (substring match). */
+function mapAuthErrorMessage(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("invalid login credentials")) {
+    return "Invalid email or password. Try again or use a magic link.";
+  }
+  if (m.includes("email not confirmed")) {
+    return "Confirm your email before signing in, or use the link we sent you.";
+  }
+  if (m.includes("user already registered") || m.includes("already been registered")) {
+    return "An account with this email already exists. Sign in instead.";
+  }
+  if (m.includes("password") && (m.includes("at least") || m.includes("least"))) {
+    return "Password does not meet the minimum length or strength.";
+  }
+  if (m.includes("weak") && m.includes("password")) {
+    return "Password is too weak. Try a longer, more varied password.";
+  }
+  return message;
+}
 
 function LoginErrorMessage() {
   const searchParams = useSearchParams();
@@ -33,10 +56,20 @@ function LoginErrorMessage() {
 const TITLE = "stackd";
 const CHAR_DELAY = 80;
 
+type AuthTab = "sign-in" | "sign-up";
+type SignInMethod = "password" | "magic";
+
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [authTab, setAuthTab] = useState<AuthTab>("sign-in");
+  const [signInMethod, setSignInMethod] = useState<SignInMethod>("password");
   const [submitted, setSubmitted] = useState(false);
+  const [signUpEmailSent, setSignUpEmailSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [typedText, setTypedText] = useState("");
@@ -100,7 +133,7 @@ export default function LoginPage() {
     }
   }
 
-  async function handleLogin() {
+  async function handleMagicLink() {
     setLoading(true);
     setError("");
     const supabase = createClient();
@@ -111,7 +144,7 @@ export default function LoginPage() {
       },
     });
     if (error) {
-      setError(error.message);
+      setError(mapAuthErrorMessage(error.message));
       setLoading(false);
     } else {
       setSubmitted(true);
@@ -119,8 +152,60 @@ export default function LoginPage() {
     }
   }
 
+  async function handlePasswordSignIn() {
+    setPasswordLoading(true);
+    setError("");
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      setError(mapAuthErrorMessage(error.message));
+      setPasswordLoading(false);
+      return;
+    }
+    router.replace("/dashboard");
+  }
+
+  async function handleSignUp() {
+    setPasswordLoading(true);
+    setError("");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setPasswordLoading(false);
+      return;
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      setPasswordLoading(false);
+      return;
+    }
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${getBrowserSiteOrigin()}/auth/callback`,
+      },
+    });
+    if (error) {
+      setError(mapAuthErrorMessage(error.message));
+      setPasswordLoading(false);
+      return;
+    }
+    if (data.session) {
+      router.replace("/onboarding");
+      return;
+    }
+    setSignUpEmailSent(true);
+    setPasswordLoading(false);
+  }
+
   const oauthBusy = googleLoading;
   const otpBusy = loading;
+  const pwBusy = passwordLoading;
+  const formBusy = oauthBusy || otpBusy || pwBusy;
 
   return (
     <main
@@ -170,7 +255,27 @@ export default function LoginPage() {
           one page. every link.
         </p>
 
-        {!submitted ? (
+        {submitted ? (
+          <p
+            style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}
+          >
+            Check your email — we sent a magic link to{" "}
+            <span style={{ color: "var(--text)", fontWeight: 500 }}>
+              {email}
+            </span>
+            .
+          </p>
+        ) : signUpEmailSent ? (
+          <p
+            style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}
+          >
+            Check your email — we sent a confirmation link to{" "}
+            <span style={{ color: "var(--text)", fontWeight: 500 }}>
+              {email}
+            </span>
+            . After you confirm, you can sign in here.
+          </p>
+        ) : (
           <>
             <p
               style={{
@@ -181,15 +286,15 @@ export default function LoginPage() {
               }}
             >
               Create a free profile with all your links and share it anywhere.
-              Sign in with Google or enter your email for a magic link.
+              Sign in with Google, email and password, or a magic link.
             </p>
 
             <button
               type="button"
               onClick={signInWithGoogle}
-              disabled={oauthBusy || otpBusy}
+              disabled={formBusy}
               aria-busy={oauthBusy}
-              aria-disabled={oauthBusy || otpBusy}
+              aria-disabled={formBusy}
               style={{
                 width: "100%",
                 display: "flex",
@@ -204,8 +309,8 @@ export default function LoginPage() {
                 fontSize: "14px",
                 fontWeight: 500,
                 fontFamily: "Metropolis, sans-serif",
-                cursor: oauthBusy || otpBusy ? "not-allowed" : "pointer",
-                opacity: oauthBusy || otpBusy ? 0.6 : 1,
+                cursor: formBusy ? "not-allowed" : "pointer",
+                opacity: formBusy ? 0.6 : 1,
               }}
             >
               <svg
@@ -270,29 +375,291 @@ export default function LoginPage() {
               />
             </div>
 
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && !oauthBusy && !otpBusy && handleLogin()
-              }
-              disabled={oauthBusy}
+            <div
+              role="tablist"
+              aria-label="Sign in or sign up"
               style={{
-                width: "100%",
-                backgroundColor: "var(--surface)",
+                display: "flex",
+                marginBottom: "16px",
                 border: "1px solid var(--divider)",
                 borderRadius: "4px",
-                padding: "10px 14px",
-                fontSize: "14px",
-                fontFamily: "Metropolis, sans-serif",
-                color: "var(--text)",
-                outline: "none",
-                marginBottom: "12px",
-                opacity: oauthBusy ? 0.6 : 1,
+                overflow: "hidden",
               }}
-            />
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authTab === "sign-in"}
+                id="tab-sign-in"
+                aria-controls="auth-panel"
+                onClick={() => {
+                  setAuthTab("sign-in");
+                  setError("");
+                }}
+                disabled={formBusy}
+                style={{
+                  flex: 1,
+                  padding: "10px 12px",
+                  fontSize: "14px",
+                  fontWeight: authTab === "sign-in" ? 600 : 500,
+                  fontFamily: "Metropolis, sans-serif",
+                  border: "none",
+                  borderRight: "1px solid var(--divider)",
+                  cursor: formBusy ? "not-allowed" : "pointer",
+                  backgroundColor:
+                    authTab === "sign-in" ? "var(--surface)" : "var(--bg)",
+                  color: "var(--text)",
+                }}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authTab === "sign-up"}
+                id="tab-sign-up"
+                aria-controls="auth-panel"
+                onClick={() => {
+                  setAuthTab("sign-up");
+                  setError("");
+                  setConfirmPassword("");
+                }}
+                disabled={formBusy}
+                style={{
+                  flex: 1,
+                  padding: "10px 12px",
+                  fontSize: "14px",
+                  fontWeight: authTab === "sign-up" ? 600 : 500,
+                  fontFamily: "Metropolis, sans-serif",
+                  border: "none",
+                  cursor: formBusy ? "not-allowed" : "pointer",
+                  backgroundColor:
+                    authTab === "sign-up" ? "var(--surface)" : "var(--bg)",
+                  color: "var(--text)",
+                }}
+              >
+                Sign up
+              </button>
+            </div>
+
+            <div id="auth-panel" role="tabpanel" aria-labelledby={authTab === "sign-in" ? "tab-sign-in" : "tab-sign-up"}>
+              {authTab === "sign-in" && signInMethod === "password" ? (
+                <>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !formBusy && email && password) {
+                        e.preventDefault();
+                        void handlePasswordSignIn();
+                      }
+                    }}
+                    disabled={formBusy}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--divider)",
+                      borderRadius: "4px",
+                      padding: "10px 14px",
+                      fontSize: "14px",
+                      fontFamily: "Metropolis, sans-serif",
+                      color: "var(--text)",
+                      outline: "none",
+                      marginBottom: "12px",
+                      opacity: formBusy ? 0.6 : 1,
+                    }}
+                  />
+                  <input
+                    type="password"
+                    name="password"
+                    autoComplete="current-password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !formBusy && email && password) {
+                        e.preventDefault();
+                        void handlePasswordSignIn();
+                      }
+                    }}
+                    disabled={formBusy}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--divider)",
+                      borderRadius: "4px",
+                      padding: "10px 14px",
+                      fontSize: "14px",
+                      fontFamily: "Metropolis, sans-serif",
+                      color: "var(--text)",
+                      outline: "none",
+                      marginBottom: "10px",
+                      opacity: formBusy ? 0.6 : 1,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignInMethod("magic");
+                      setError("");
+                    }}
+                    disabled={formBusy}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      marginBottom: "12px",
+                      fontSize: "12px",
+                      fontFamily: "Metropolis, sans-serif",
+                      color: "var(--accent)",
+                      cursor: formBusy ? "not-allowed" : "pointer",
+                      textDecoration: "underline",
+                      textUnderlineOffset: "2px",
+                    }}
+                  >
+                    Email me a magic link instead
+                  </button>
+                </>
+              ) : authTab === "sign-in" && signInMethod === "magic" ? (
+                <>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !formBusy && email && !otpBusy) {
+                        e.preventDefault();
+                        void handleMagicLink();
+                      }
+                    }}
+                    disabled={formBusy}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--divider)",
+                      borderRadius: "4px",
+                      padding: "10px 14px",
+                      fontSize: "14px",
+                      fontFamily: "Metropolis, sans-serif",
+                      color: "var(--text)",
+                      outline: "none",
+                      marginBottom: "10px",
+                      opacity: formBusy ? 0.6 : 1,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignInMethod("password");
+                      setError("");
+                    }}
+                    disabled={formBusy}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      marginBottom: "12px",
+                      fontSize: "12px",
+                      fontFamily: "Metropolis, sans-serif",
+                      color: "var(--accent)",
+                      cursor: formBusy ? "not-allowed" : "pointer",
+                      textDecoration: "underline",
+                      textUnderlineOffset: "2px",
+                    }}
+                  >
+                    Sign in with password
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={formBusy}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--divider)",
+                      borderRadius: "4px",
+                      padding: "10px 14px",
+                      fontSize: "14px",
+                      fontFamily: "Metropolis, sans-serif",
+                      color: "var(--text)",
+                      outline: "none",
+                      marginBottom: "12px",
+                      opacity: formBusy ? 0.6 : 1,
+                    }}
+                  />
+                  <input
+                    type="password"
+                    name="new-password"
+                    autoComplete="new-password"
+                    placeholder={`Password (at least ${MIN_PASSWORD_LENGTH} characters)`}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={formBusy}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--divider)",
+                      borderRadius: "4px",
+                      padding: "10px 14px",
+                      fontSize: "14px",
+                      fontFamily: "Metropolis, sans-serif",
+                      color: "var(--text)",
+                      outline: "none",
+                      marginBottom: "12px",
+                      opacity: formBusy ? 0.6 : 1,
+                    }}
+                  />
+                  <input
+                    type="password"
+                    name="confirm-password"
+                    autoComplete="new-password"
+                    placeholder="Confirm password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Enter" &&
+                        !formBusy &&
+                        email &&
+                        password &&
+                        confirmPassword
+                      ) {
+                        e.preventDefault();
+                        void handleSignUp();
+                      }
+                    }}
+                    disabled={formBusy}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--divider)",
+                      borderRadius: "4px",
+                      padding: "10px 14px",
+                      fontSize: "14px",
+                      fontFamily: "Metropolis, sans-serif",
+                      color: "var(--text)",
+                      outline: "none",
+                      marginBottom: "12px",
+                      opacity: formBusy ? 0.6 : 1,
+                    }}
+                  />
+                </>
+              )}
+            </div>
 
             {error && (
               <p
@@ -306,43 +673,119 @@ export default function LoginPage() {
               </p>
             )}
 
-            <button
-              type="button"
-              onClick={handleLogin}
-              disabled={otpBusy || oauthBusy || !email}
-              aria-busy={otpBusy}
-              aria-disabled={otpBusy || oauthBusy || !email}
-              style={{
-                width: "100%",
-                backgroundColor: "var(--accent)",
-                color: "var(--bg)",
-                border: "none",
-                borderRadius: "4px",
-                padding: "11px",
-                fontSize: "14px",
-                fontWeight: 500,
-                fontFamily: "Metropolis, sans-serif",
-                cursor: otpBusy || oauthBusy || !email ? "not-allowed" : "pointer",
-                opacity: otpBusy || oauthBusy || !email ? 0.6 : 1,
-              }}
-            >
-              {otpBusy ? "Sending..." : "Send magic link"}
-            </button>
+            {authTab === "sign-in" && signInMethod === "password" ? (
+              <button
+                type="button"
+                onClick={() => void handlePasswordSignIn()}
+                disabled={pwBusy || oauthBusy || otpBusy || !email || !password}
+                aria-busy={pwBusy}
+                aria-disabled={pwBusy || oauthBusy || otpBusy || !email || !password}
+                style={{
+                  width: "100%",
+                  backgroundColor: "var(--accent)",
+                  color: "var(--bg)",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "11px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  fontFamily: "Metropolis, sans-serif",
+                  cursor:
+                    pwBusy || oauthBusy || otpBusy || !email || !password
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity:
+                    pwBusy || oauthBusy || otpBusy || !email || !password ? 0.6 : 1,
+                }}
+              >
+                {pwBusy ? "Signing in…" : "Sign in"}
+              </button>
+            ) : authTab === "sign-in" && signInMethod === "magic" ? (
+              <button
+                type="button"
+                onClick={() => void handleMagicLink()}
+                disabled={otpBusy || oauthBusy || pwBusy || !email}
+                aria-busy={otpBusy}
+                aria-disabled={otpBusy || oauthBusy || pwBusy || !email}
+                style={{
+                  width: "100%",
+                  backgroundColor: "var(--accent)",
+                  color: "var(--bg)",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "11px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  fontFamily: "Metropolis, sans-serif",
+                  cursor:
+                    otpBusy || oauthBusy || pwBusy || !email
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity:
+                    otpBusy || oauthBusy || pwBusy || !email ? 0.6 : 1,
+                }}
+              >
+                {otpBusy ? "Sending…" : "Send magic link"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleSignUp()}
+                disabled={
+                  pwBusy ||
+                  oauthBusy ||
+                  otpBusy ||
+                  !email ||
+                  !password ||
+                  !confirmPassword
+                }
+                aria-busy={pwBusy}
+                aria-disabled={
+                  pwBusy ||
+                  oauthBusy ||
+                  otpBusy ||
+                  !email ||
+                  !password ||
+                  !confirmPassword
+                }
+                style={{
+                  width: "100%",
+                  backgroundColor: "var(--accent)",
+                  color: "var(--bg)",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "11px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  fontFamily: "Metropolis, sans-serif",
+                  cursor:
+                    pwBusy ||
+                    oauthBusy ||
+                    otpBusy ||
+                    !email ||
+                    !password ||
+                    !confirmPassword
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity:
+                    pwBusy ||
+                    oauthBusy ||
+                    otpBusy ||
+                    !email ||
+                    !password ||
+                    !confirmPassword
+                      ? 0.6
+                      : 1,
+                }}
+              >
+                {pwBusy ? "Creating account…" : "Create account"}
+              </button>
+            )}
 
             <Suspense fallback={null}>
               <LoginErrorMessage />
             </Suspense>
           </>
-        ) : (
-          <p
-            style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}
-          >
-            Check your email — we sent a magic link to{" "}
-            <span style={{ color: "var(--text)", fontWeight: 500 }}>
-              {email}
-            </span>
-            .
-          </p>
         )}
       </div>
     </main>
