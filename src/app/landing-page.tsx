@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import styles from "./landing-page.module.css";
 
@@ -62,11 +62,160 @@ const THEMES: Record<
   },
 };
 
+const THEME_KEYS_ORDER: ThemeKey[] = [
+  "default",
+  "retro",
+  "noir",
+  "soft",
+  "terminal",
+];
+
+const AUTO_THEME_INTERVAL_MS = 5_000;
+const AUTO_THEME_PAUSE_AFTER_USER_MS = 25_000;
+
+const HOW_IT_WORKS_STEPS = [
+  {
+    title: "Claim your username",
+    body: "Your page lives at a simple public URL.",
+  },
+  {
+    title: "Add your links",
+    body: "Portfolio, shop, newsletter, socials — whatever you share.",
+  },
+  {
+    title: "Drop one link in your bio",
+    body: "Point people everywhere from a single place.",
+  },
+];
+
 const MOCK_LINKS = [
   { id: "1", title: "Portfolio" },
   { id: "2", title: "Newsletter" },
   { id: "3", title: "Instagram" },
 ];
+
+function ThemePreviewMock({ themeKey }: { themeKey: ThemeKey }) {
+  const theme = THEMES[themeKey];
+  return (
+    <div
+      className={styles.themePreviewCard}
+      style={{
+        backgroundColor: theme.bg,
+        border: `1px solid ${theme.divider}`,
+        borderRadius: "8px",
+        padding: "44px 32px 36px",
+        fontFamily: theme.fontFamily,
+        boxShadow:
+          "0 10px 36px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)",
+      }}
+    >
+      <div
+        style={{
+          width: "72px",
+          height: "72px",
+          borderRadius: "50%",
+          backgroundColor: theme.divider,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "24px",
+          fontWeight: 600,
+          color: theme.muted,
+          margin: "0 auto 14px",
+          overflow: "hidden",
+          flexShrink: 0,
+        }}
+      >
+        K
+      </div>
+
+      <p
+        style={{
+          textAlign: "center",
+          fontSize: "20px",
+          fontWeight: 600,
+          letterSpacing: "-0.3px",
+          lineHeight: 1.2,
+          color: theme.text,
+          marginBottom: "6px",
+        }}
+      >
+        Kaia
+      </p>
+
+      <p
+        style={{
+          textAlign: "center",
+          fontSize: "12px",
+          color: theme.muted,
+          lineHeight: 1.5,
+          marginBottom: "28px",
+        }}
+      >
+        designer & creator
+      </p>
+
+      <div style={{ display: "flex" }}>
+        <div
+          style={{
+            width: "2px",
+            backgroundColor: theme.accent,
+            alignSelf: "stretch",
+            marginTop: "15px",
+            marginBottom: "15px",
+            flexShrink: 0,
+          }}
+        />
+        <ul
+          style={{
+            flex: 1,
+            listStyle: "none",
+            padding: 0,
+            margin: 0,
+            minWidth: 0,
+          }}
+        >
+          {MOCK_LINKS.map((link) => (
+            <li key={link.id}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "15px 0 15px 14px",
+                  color: theme.text,
+                }}
+              >
+                <span style={{ fontSize: "13px", fontWeight: 500, lineHeight: 1 }}>
+                  {link.title}
+                </span>
+                <span style={{ fontSize: "13px", color: theme.accent, lineHeight: 1 }}>
+                  →
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div style={{ marginTop: "20px", textAlign: "center" }}>
+        <span
+          style={{
+            fontSize: "10px",
+            lineHeight: 1,
+            color: theme.muted,
+            letterSpacing: "0.5px",
+            textDecoration: "underline",
+            textDecorationColor: theme.divider,
+            textUnderlineOffset: "3px",
+          }}
+        >
+          made with stackd
+        </span>
+      </div>
+    </div>
+  );
+}
 
 const FAQ_ITEMS = [
   {
@@ -91,13 +240,21 @@ export default function LandingPage() {
   const [typedText, setTypedText] = useState("");
   const [cursorVisible, setCursorVisible] = useState(true);
   const [activeTheme, setActiveTheme] = useState<ThemeKey>("default");
-  const [displayedTheme, setDisplayedTheme] = useState<ThemeKey>("default");
-  const [previewAnim, setPreviewAnim] = useState<"idle" | "exiting" | "entering">("idle");
+  const [committedTheme, setCommittedTheme] = useState<ThemeKey>("default");
+  const [crossfade, setCrossfade] = useState<{
+    from: ThemeKey;
+    to: ThemeKey;
+  } | null>(null);
+  const [crossfadeProgress, setCrossfadeProgress] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const crossfadeTargetRef = useRef<ThemeKey | null>(null);
+  const activeThemeRef = useRef<ThemeKey>(activeTheme);
+  const pauseAutoThemeUntilRef = useRef(0);
+
+  activeThemeRef.current = activeTheme;
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -139,32 +296,72 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
+    if (!crossfade) {
+      setCrossfadeProgress(false);
+      return;
+    }
+    setCrossfadeProgress(false);
+    let innerId = 0;
+    const outerId = requestAnimationFrame(() => {
+      innerId = requestAnimationFrame(() => setCrossfadeProgress(true));
+    });
     return () => {
-      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+      cancelAnimationFrame(outerId);
+      cancelAnimationFrame(innerId);
     };
-  }, []);
+  }, [crossfade]);
 
-  function handleThemeChange(key: ThemeKey) {
-    if (key === activeTheme) return;
-    setActiveTheme(key);
+  const handleCrossfadeInEnd = useCallback(
+    (e: React.TransitionEvent<HTMLDivElement>) => {
+      if (e.propertyName !== "opacity" || e.target !== e.currentTarget) return;
+      const to = crossfadeTargetRef.current;
+      if (to == null) return;
+      crossfadeTargetRef.current = null;
+      setCommittedTheme(to);
+      setCrossfade(null);
+    },
+    [],
+  );
 
+  const handleThemeChange = useCallback(
+    (key: ThemeKey, opts?: { fromUser?: boolean }) => {
+      if (key === activeTheme) return;
+      if (crossfade !== null) return;
+      if (opts?.fromUser) {
+        pauseAutoThemeUntilRef.current = Date.now() + AUTO_THEME_PAUSE_AFTER_USER_MS;
+      }
+      setActiveTheme(key);
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setCommittedTheme(key);
+        return;
+      }
+
+      crossfadeTargetRef.current = key;
+      setCrossfade({ from: committedTheme, to: key });
+    },
+    [activeTheme, crossfade, committedTheme],
+  );
+
+  const handleThemeChangeRef = useRef(handleThemeChange);
+  handleThemeChangeRef.current = handleThemeChange;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDisplayedTheme(key);
       return;
     }
 
-    if (animTimerRef.current) clearTimeout(animTimerRef.current);
-    setPreviewAnim("exiting");
-    animTimerRef.current = setTimeout(() => {
-      setDisplayedTheme(key);
-      setPreviewAnim("entering");
-      animTimerRef.current = setTimeout(() => {
-        setPreviewAnim("idle");
-      }, 180);
-    }, 150);
-  }
+    const id = window.setInterval(() => {
+      if (Date.now() < pauseAutoThemeUntilRef.current) return;
+      const current = activeThemeRef.current;
+      const idx = THEME_KEYS_ORDER.indexOf(current);
+      const next = THEME_KEYS_ORDER[(idx + 1) % THEME_KEYS_ORDER.length];
+      handleThemeChangeRef.current(next);
+    }, AUTO_THEME_INTERVAL_MS);
 
-  const theme = THEMES[displayedTheme];
+    return () => clearInterval(id);
+  }, []);
 
   return (
     // No horizontal padding on <main> — footer border must span the full viewport
@@ -251,132 +448,30 @@ export default function LandingPage() {
 
           {/* Right: profile mock + theme switcher */}
           <div className={styles.heroPreviewCol}>
-            <div
-              className={
-                previewAnim === "exiting"
-                  ? styles.previewExiting
-                  : previewAnim === "entering"
-                    ? styles.previewEntering
-                    : undefined
-              }
-              style={{
-                backgroundColor: theme.bg,
-                border: `1px solid ${theme.divider}`,
-                borderRadius: "8px",
-                padding: "44px 32px 36px",
-                fontFamily: theme.fontFamily,
-                marginBottom: "16px",
-              }}
-            >
-              {/* Avatar */}
-              <div
-                style={{
-                  width: "72px",
-                  height: "72px",
-                  borderRadius: "50%",
-                  backgroundColor: theme.divider,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "24px",
-                  fontWeight: 600,
-                  color: theme.muted,
-                  margin: "0 auto 14px",
-                  overflow: "hidden",
-                  flexShrink: 0,
-                }}
-              >
-                K
-              </div>
-
-              {/* Name */}
-              <p
-                style={{
-                  textAlign: "center",
-                  fontSize: "20px",
-                  fontWeight: 600,
-                  letterSpacing: "-0.3px",
-                  lineHeight: 1.2,
-                  color: theme.text,
-                  marginBottom: "6px",
-                }}
-              >
-                Kaia
-              </p>
-
-              {/* Bio */}
-              <p
-                style={{
-                  textAlign: "center",
-                  fontSize: "12px",
-                  color: theme.muted,
-                  lineHeight: 1.5,
-                  marginBottom: "28px",
-                }}
-              >
-                designer & creator
-              </p>
-
-              {/* Links — matches /[username]/page.tsx structure */}
-              <div style={{ display: "flex" }}>
-                <div
-                  style={{
-                    width: "2px",
-                    backgroundColor: theme.accent,
-                    alignSelf: "stretch",
-                    marginTop: "15px",
-                    marginBottom: "15px",
-                    flexShrink: 0,
-                  }}
-                />
-                <ul
-                  style={{
-                    flex: 1,
-                    listStyle: "none",
-                    padding: 0,
-                    margin: 0,
-                    minWidth: 0,
-                  }}
-                >
-                  {MOCK_LINKS.map((link) => (
-                    <li key={link.id}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "15px 0 15px 14px",
-                          color: theme.text,
-                        }}
-                      >
-                        <span style={{ fontSize: "13px", fontWeight: 500, lineHeight: 1 }}>
-                          {link.title}
-                        </span>
-                        <span style={{ fontSize: "13px", color: theme.accent, lineHeight: 1 }}>
-                          →
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Profile footer */}
-              <div style={{ marginTop: "20px", textAlign: "center" }}>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    lineHeight: 1,
-                    color: theme.muted,
-                    letterSpacing: "0.5px",
-                    textDecoration: "underline",
-                    textDecorationColor: theme.divider,
-                    textUnderlineOffset: "3px",
-                  }}
-                >
-                  made with stackd
-                </span>
-              </div>
+            <div className={styles.previewStack}>
+              {!crossfade ? (
+                <ThemePreviewMock themeKey={committedTheme} />
+              ) : (
+                <>
+                  <div
+                    className={styles.previewLayer}
+                    style={{
+                      opacity: crossfadeProgress ? 0 : 1,
+                    }}
+                  >
+                    <ThemePreviewMock themeKey={crossfade.from} />
+                  </div>
+                  <div
+                    className={styles.previewLayer}
+                    style={{
+                      opacity: crossfadeProgress ? 1 : 0,
+                    }}
+                    onTransitionEnd={handleCrossfadeInEnd}
+                  >
+                    <ThemePreviewMock themeKey={crossfade.to} />
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Theme switcher */}
@@ -387,10 +482,11 @@ export default function LandingPage() {
                 gap: "16px",
               }}
             >
-              {(Object.keys(THEMES) as ThemeKey[]).map((key) => (
+              {THEME_KEYS_ORDER.map((key) => (
                 <button
                   key={key}
-                  onClick={() => handleThemeChange(key)}
+                  type="button"
+                  onClick={() => handleThemeChange(key, { fromUser: true })}
                   style={{
                     background: "none",
                     border: "none",
@@ -402,7 +498,7 @@ export default function LandingPage() {
                     cursor: "pointer",
                     borderBottom:
                       activeTheme === key
-                        ? "1px solid var(--text)"
+                        ? `1px solid ${THEMES[activeTheme].accent}`
                         : "1px solid transparent",
                   }}
                 >
@@ -411,6 +507,25 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section className={styles.howItWorksSection} aria-labelledby="how-it-works-heading">
+          <h2 id="how-it-works-heading" className={styles.howItWorksLabel}>
+            How it works
+          </h2>
+          <ol className={styles.howItWorksList}>
+            {HOW_IT_WORKS_STEPS.map((step, i) => (
+              <li key={step.title} className={styles.howItWorksItem}>
+                <span className={styles.howItWorksIndex} aria-hidden="true">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className={styles.howItWorksStepTitle}>{step.title}</p>
+                  <p className={styles.howItWorksStepBody}>{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
 
         {/* FAQ section */}
