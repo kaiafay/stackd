@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import LandingPage from "./_components/landing-page";
+import LandingPage from "./landing-page";
 
 export default async function HomePage() {
   const supabase = await createClient();

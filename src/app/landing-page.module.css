@@ -132,6 +132,25 @@
   }
 }
 
+@keyframes themeSlideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-10px); }
+}
+
+@keyframes themeSlideIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.previewExiting {
+  animation: themeSlideOut 0.15s ease forwards;
+  pointer-events: none;
+}
+
+.previewEntering {
+  animation: themeSlideIn 0.18s ease forwards;
+}
+
 .faqSection {
   padding-top: 48px;
   padding-bottom: 56px;

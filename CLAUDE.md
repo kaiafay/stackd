@@ -27,7 +27,7 @@ No test suite is configured.
 ### Key routes
 | Route | Type | Purpose |
 |---|---|---|
-| `/` | Server | Redirects to `/dashboard` (authed) or `/login` |
+| `/` | Server | Redirects to `/dashboard` (authed) or renders landing page (unauthed) |
 | `/login` | Client | Google OAuth, email/password sign-in, sign-up, and magic link |
 | `/auth/callback` | Server | Exchanges PKCE code (magic link, Google, password confirm); redirects to `/onboarding` if no profile, `/dashboard` if profile exists |
 | `/onboarding` | Client | Protected; new users choose a public username and create their profile |

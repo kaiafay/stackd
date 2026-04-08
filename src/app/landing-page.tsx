@@ -83,7 +83,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Who built this?",
-    a: "A solo project by Kaia. It exists because existing tools kept asking for upgrades to do basic things.",
+    a: "A solo project by Kaia. Because every link-in-bio tool looks identical — and I wanted something minimal, editorial, and actually personal.",
   },
 ];
 
@@ -91,10 +91,13 @@ export default function LandingPage() {
   const [typedText, setTypedText] = useState("");
   const [cursorVisible, setCursorVisible] = useState(true);
   const [activeTheme, setActiveTheme] = useState<ThemeKey>("default");
+  const [displayedTheme, setDisplayedTheme] = useState<ThemeKey>("default");
+  const [previewAnim, setPreviewAnim] = useState<"idle" | "exiting" | "entering">("idle");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -135,7 +138,33 @@ export default function LandingPage() {
     };
   }, []);
 
-  const theme = THEMES[activeTheme];
+  useEffect(() => {
+    return () => {
+      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    };
+  }, []);
+
+  function handleThemeChange(key: ThemeKey) {
+    if (key === activeTheme) return;
+    setActiveTheme(key);
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisplayedTheme(key);
+      return;
+    }
+
+    if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    setPreviewAnim("exiting");
+    animTimerRef.current = setTimeout(() => {
+      setDisplayedTheme(key);
+      setPreviewAnim("entering");
+      animTimerRef.current = setTimeout(() => {
+        setPreviewAnim("idle");
+      }, 180);
+    }, 150);
+  }
+
+  const theme = THEMES[displayedTheme];
 
   return (
     // No horizontal padding on <main> — footer border must span the full viewport
@@ -223,14 +252,19 @@ export default function LandingPage() {
           {/* Right: profile mock + theme switcher */}
           <div className={styles.heroPreviewCol}>
             <div
+              className={
+                previewAnim === "exiting"
+                  ? styles.previewExiting
+                  : previewAnim === "entering"
+                    ? styles.previewEntering
+                    : undefined
+              }
               style={{
                 backgroundColor: theme.bg,
                 border: `1px solid ${theme.divider}`,
                 borderRadius: "8px",
-                padding: "36px 32px 28px",
+                padding: "44px 32px 36px",
                 fontFamily: theme.fontFamily,
-                transition:
-                  "background-color 0.2s ease, border-color 0.2s ease",
                 marginBottom: "16px",
               }}
             >
@@ -262,6 +296,7 @@ export default function LandingPage() {
                   fontSize: "20px",
                   fontWeight: 600,
                   letterSpacing: "-0.3px",
+                  lineHeight: 1.2,
                   color: theme.text,
                   marginBottom: "6px",
                 }}
@@ -314,10 +349,10 @@ export default function LandingPage() {
                           color: theme.text,
                         }}
                       >
-                        <span style={{ fontSize: "13px", fontWeight: 500 }}>
+                        <span style={{ fontSize: "13px", fontWeight: 500, lineHeight: 1 }}>
                           {link.title}
                         </span>
-                        <span style={{ fontSize: "13px", color: theme.accent }}>
+                        <span style={{ fontSize: "13px", color: theme.accent, lineHeight: 1 }}>
                           →
                         </span>
                       </div>
@@ -331,6 +366,7 @@ export default function LandingPage() {
                 <span
                   style={{
                     fontSize: "10px",
+                    lineHeight: 1,
                     color: theme.muted,
                     letterSpacing: "0.5px",
                     textDecoration: "underline",
@@ -354,7 +390,7 @@ export default function LandingPage() {
               {(Object.keys(THEMES) as ThemeKey[]).map((key) => (
                 <button
                   key={key}
-                  onClick={() => setActiveTheme(key)}
+                  onClick={() => handleThemeChange(key)}
                   style={{
                     background: "none",
                     border: "none",
