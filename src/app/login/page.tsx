@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getBrowserSiteOrigin } from "@/lib/site-url";
@@ -8,7 +8,8 @@ import { getBrowserSiteOrigin } from "@/lib/site-url";
 const MIN_PASSWORD_LENGTH = 8;
 
 const URL_ERROR_MESSAGES: Record<string, string> = {
-  profile_creation_failed: "We had trouble setting up your account. Please try signing in again.",
+  profile_creation_failed:
+    "We had trouble setting up your account. Please try signing in again.",
   auth: "Something went wrong signing you in. Please try again.",
   oauth: "Sign-in was cancelled or failed. Please try again.",
 };
@@ -22,10 +23,16 @@ function mapAuthErrorMessage(message: string): string {
   if (m.includes("email not confirmed")) {
     return "Confirm your email before signing in, or use the link we sent you.";
   }
-  if (m.includes("user already registered") || m.includes("already been registered")) {
+  if (
+    m.includes("user already registered") ||
+    m.includes("already been registered")
+  ) {
     return "An account with this email already exists. Sign in instead.";
   }
-  if (m.includes("password") && (m.includes("at least") || m.includes("least"))) {
+  if (
+    m.includes("password") &&
+    (m.includes("at least") || m.includes("least"))
+  ) {
     return "Password does not meet the minimum length or strength.";
   }
   if (m.includes("weak") && m.includes("password")) {
@@ -38,7 +45,8 @@ function LoginErrorMessage() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
   if (!urlError) return null;
-  const message = URL_ERROR_MESSAGES[urlError] ?? "Something went wrong. Please try again.";
+  const message =
+    URL_ERROR_MESSAGES[urlError] ?? "Something went wrong. Please try again.";
   return (
     <p
       style={{
@@ -53,18 +61,25 @@ function LoginErrorMessage() {
   );
 }
 
-const TITLE = "stackd";
-const CHAR_DELAY = 80;
-
 type AuthTab = "sign-in" | "sign-up";
 type SignInMethod = "password" | "magic";
 
-export default function LoginPage() {
+function LoginInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [authTab, setAuthTab] = useState<AuthTab>("sign-in");
+  const authTab: AuthTab =
+    searchParams.get("tab") === "sign-up" ? "sign-up" : "sign-in";
+
+  function replaceLoginQuery(mutate: (p: URLSearchParams) => void) {
+    const p = new URLSearchParams(searchParams.toString());
+    mutate(p);
+    const q = p.toString();
+    router.replace(q ? `/login?${q}` : "/login");
+  }
+
   const [signInMethod, setSignInMethod] = useState<SignInMethod>("password");
   const [submitted, setSubmitted] = useState(false);
   const [signUpEmailSent, setSignUpEmailSent] = useState(false);
@@ -72,50 +87,6 @@ export default function LoginPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
-  const [typedText, setTypedText] = useState("");
-  const [cursorVisible, setCursorVisible] = useState(true);
-
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setTypedText(TITLE);
-      setCursorVisible(false);
-      return;
-    }
-
-    let i = 0;
-    let mounted = true;
-
-    const type = () => {
-      if (!mounted) return;
-      if (i < TITLE.length) {
-        setTypedText(TITLE.slice(0, i + 1));
-        i++;
-        timeoutRef.current = setTimeout(type, CHAR_DELAY);
-      } else {
-        let blinks = 0;
-        intervalRef.current = setInterval(() => {
-          if (!mounted) return;
-          setCursorVisible((v) => !v);
-          blinks++;
-          if (blinks >= 5) {
-            clearInterval(intervalRef.current!);
-            setCursorVisible(false);
-          }
-        }, 350);
-      }
-    };
-
-    timeoutRef.current = setTimeout(type, 200);
-
-    return () => {
-      mounted = false;
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
 
   async function signInWithGoogle() {
     setGoogleLoading(true);
@@ -225,35 +196,12 @@ export default function LoginPage() {
             fontSize: "32px",
             fontWeight: 600,
             letterSpacing: "-0.5px",
-            marginBottom: "8px",
+            marginBottom: "28px",
             color: "var(--text)",
           }}
         >
-          {typedText}
-          <span
-            style={{
-              display: "inline-block",
-              width: "2px",
-              height: "0.85em",
-              backgroundColor: "var(--accent)",
-              marginLeft: "2px",
-              verticalAlign: "middle",
-              opacity: cursorVisible ? 1 : 0,
-            }}
-          />
+          stackd
         </h1>
-
-        <p
-          style={{
-            fontSize: "14px",
-            fontWeight: 500,
-            color: "var(--muted)",
-            marginBottom: "28px",
-            letterSpacing: "0.1px",
-          }}
-        >
-          one page. every link.
-        </p>
 
         {submitted ? (
           <p
@@ -277,18 +225,6 @@ export default function LoginPage() {
           </p>
         ) : (
           <>
-            <p
-              style={{
-                fontSize: "13px",
-                color: "var(--muted)",
-                marginBottom: "16px",
-                lineHeight: 1.6,
-              }}
-            >
-              Create a free profile with all your links and share it anywhere.
-              Sign in with Google, email and password, or a magic link.
-            </p>
-
             <button
               type="button"
               onClick={signInWithGoogle}
@@ -393,7 +329,9 @@ export default function LoginPage() {
                 id="tab-sign-in"
                 aria-controls="auth-panel"
                 onClick={() => {
-                  setAuthTab("sign-in");
+                  replaceLoginQuery((p) => {
+                    p.delete("tab");
+                  });
                   setError("");
                 }}
                 disabled={formBusy}
@@ -420,7 +358,9 @@ export default function LoginPage() {
                 id="tab-sign-up"
                 aria-controls="auth-panel"
                 onClick={() => {
-                  setAuthTab("sign-up");
+                  replaceLoginQuery((p) => {
+                    p.set("tab", "sign-up");
+                  });
                   setError("");
                   setConfirmPassword("");
                 }}
@@ -442,7 +382,13 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <div id="auth-panel" role="tabpanel" aria-labelledby={authTab === "sign-in" ? "tab-sign-in" : "tab-sign-up"}>
+            <div
+              id="auth-panel"
+              role="tabpanel"
+              aria-labelledby={
+                authTab === "sign-in" ? "tab-sign-in" : "tab-sign-up"
+              }
+            >
               {authTab === "sign-in" && signInMethod === "password" ? (
                 <>
                   <input
@@ -679,7 +625,9 @@ export default function LoginPage() {
                 onClick={() => void handlePasswordSignIn()}
                 disabled={pwBusy || oauthBusy || otpBusy || !email || !password}
                 aria-busy={pwBusy}
-                aria-disabled={pwBusy || oauthBusy || otpBusy || !email || !password}
+                aria-disabled={
+                  pwBusy || oauthBusy || otpBusy || !email || !password
+                }
                 style={{
                   width: "100%",
                   backgroundColor: "var(--accent)",
@@ -695,7 +643,9 @@ export default function LoginPage() {
                       ? "not-allowed"
                       : "pointer",
                   opacity:
-                    pwBusy || oauthBusy || otpBusy || !email || !password ? 0.6 : 1,
+                    pwBusy || oauthBusy || otpBusy || !email || !password
+                      ? 0.6
+                      : 1,
                 }}
               >
                 {pwBusy ? "Signing in…" : "Sign in"}
@@ -721,8 +671,7 @@ export default function LoginPage() {
                     otpBusy || oauthBusy || pwBusy || !email
                       ? "not-allowed"
                       : "pointer",
-                  opacity:
-                    otpBusy || oauthBusy || pwBusy || !email ? 0.6 : 1,
+                  opacity: otpBusy || oauthBusy || pwBusy || !email ? 0.6 : 1,
                 }}
               >
                 {otpBusy ? "Sending…" : "Send magic link"}
@@ -789,5 +738,13 @@ export default function LoginPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
   );
 }

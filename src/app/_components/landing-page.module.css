@@ -1,0 +1,145 @@
+/* Breakpoint matches previous JS matchMedia("(min-width: 900px)").
+   Media queries apply on first paint (including SSR HTML), so layout does not
+   wait for hydration — avoids mobile → desktop flash on wide viewports. */
+
+.contentWrap {
+  width: 100%;
+  max-width: 100%;
+  padding-left: 24px;
+  padding-right: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 900px) {
+  .contentWrap {
+    max-width: 1100px;
+    padding-left: 60px;
+    padding-right: 60px;
+  }
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 52px;
+  min-height: auto;
+  padding-top: 64px;
+  padding-bottom: 64px;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    flex-direction: row;
+    align-items: center;
+    gap: 80px;
+    min-height: 100vh;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+.heroTextCol {
+  flex: 1;
+  max-width: 100%;
+}
+
+@media (min-width: 900px) {
+  .heroTextCol {
+    max-width: 480px;
+  }
+}
+
+.heroTitle {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+  color: var(--text);
+  line-height: 1.05;
+  text-align: center;
+  position: relative;
+}
+
+@media (min-width: 900px) {
+  .heroTitle {
+    font-size: 60px;
+    text-align: left;
+  }
+}
+
+.heroTagline {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 20px;
+  letter-spacing: 0.05px;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .heroTagline {
+    font-size: 18px;
+    text-align: left;
+  }
+}
+
+.heroBody {
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 44px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .heroBody {
+    font-size: 16px;
+    text-align: left;
+  }
+}
+
+.heroCtas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 260px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 900px) {
+  .heroCtas {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.heroPreviewCol {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 300px;
+  align-self: center;
+}
+
+@media (min-width: 900px) {
+  .heroPreviewCol {
+    width: 340px;
+    max-width: 340px;
+  }
+}
+
+.faqSection {
+  padding-top: 48px;
+  padding-bottom: 56px;
+}
+
+@media (min-width: 900px) {
+  .faqSection {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+}
