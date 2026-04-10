@@ -100,17 +100,34 @@ export default function AccountSection({
           placeholder="username"
         />
       ) : (
-        <div
-          onClick={startEditing}
-          style={{
-            fontSize: "13px",
-            fontFamily: "Metropolis, sans-serif",
-            color: "var(--text)",
-            padding: "2px 0",
-            cursor: "text",
-          }}
-        >
-          {profile.username}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              fontSize: "13px",
+              fontFamily: "Metropolis, sans-serif",
+              color: "var(--text)",
+              padding: "2px 0",
+            }}
+          >
+            {profile.username}
+          </div>
+          <button
+            onClick={startEditing}
+            style={{
+              fontSize: "11px",
+              fontWeight: 500,
+              fontFamily: "Metropolis, sans-serif",
+              color: "var(--muted)",
+              background: "none",
+              border: "1px solid var(--divider)",
+              borderRadius: "4px",
+              padding: "3px 10px",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            Edit
+          </button>
         </div>
       )}
 
