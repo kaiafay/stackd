@@ -171,18 +171,28 @@ export default async function ProfilePage({
           <div style={{ width: "100%" }}>
             {(() => {
               // Split links into segments: section headers and groups of link items
-              type Seg = { kind: "section"; id: string; title: string } | { kind: "links"; items: typeof links };
+              type Seg =
+                | { kind: "section"; id: string; title: string }
+                | { kind: "links"; items: typeof links };
               const segments: Seg[] = [];
               let group: typeof links = [];
               for (const link of links) {
                 if (link.kind === "section") {
-                  if (group.length > 0) { segments.push({ kind: "links", items: group }); group = []; }
-                  segments.push({ kind: "section", id: link.id, title: link.title });
+                  if (group.length > 0) {
+                    segments.push({ kind: "links", items: group });
+                    group = [];
+                  }
+                  segments.push({
+                    kind: "section",
+                    id: link.id,
+                    title: link.title,
+                  });
                 } else if (link.url?.trim()) {
                   group.push(link);
                 }
               }
-              if (group.length > 0) segments.push({ kind: "links", items: group });
+              if (group.length > 0)
+                segments.push({ kind: "links", items: group });
 
               return segments.map((seg) => {
                 if (seg.kind === "section") {
@@ -221,43 +231,56 @@ export default async function ProfilePage({
                         minWidth: 0,
                       }}
                     >
-                    {seg.items.map((link) => (
-                      <li key={link.id}>
-                        <a
-                          href={`/api/click/${link.id}`}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "15px 0 15px 14px",
-                            textDecoration: "none",
-                            color: "var(--text)",
-                            width: "100%",
-                          }}
-                        >
-                          <span>
-                            <span style={{ display: "block", fontSize: "14px", fontWeight: 500 }}>
-                              {link.title}
-                            </span>
-                            {link.subtitle && (
-                              <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                                {link.subtitle}
-                              </span>
-                            )}
-                          </span>
-                          <span
+                      {seg.items.map((link) => (
+                        <li key={link.id}>
+                          <a
+                            href={`/api/click/${link.id}`}
                             style={{
-                              fontSize: "14px",
-                              color: "var(--accent)",
-                              flexShrink: 0,
-                              marginLeft: "12px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              padding: "15px 0 15px 14px",
+                              textDecoration: "none",
+                              color: "var(--text)",
+                              width: "100%",
                             }}
                           >
-                            →
-                          </span>
-                        </a>
-                      </li>
-                    ))}
+                            <span>
+                              <span
+                                style={{
+                                  display: "block",
+                                  fontSize: "14px",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {link.title}
+                              </span>
+                              {link.subtitle && (
+                                <span
+                                  style={{
+                                    display: "block",
+                                    fontSize: "11px",
+                                    color: "var(--muted)",
+                                    marginTop: "2px",
+                                  }}
+                                >
+                                  {link.subtitle}
+                                </span>
+                              )}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "14px",
+                                color: "var(--accent)",
+                                flexShrink: 0,
+                                marginLeft: "12px",
+                              }}
+                            >
+                              →
+                            </span>
+                          </a>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 );
@@ -280,7 +303,7 @@ export default async function ProfilePage({
         {/* Footer */}
         <div style={{ marginTop: "40px" }}>
           <Link
-            href="/login"
+            href="/"
             style={{
               fontSize: "11px",
               color: "var(--muted)",
