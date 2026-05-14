@@ -25,8 +25,23 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Build**: `npm run build` (verifies TypeScript + generates production output)
 - **E2E tests**: `npm run test:e2e` (Playwright; requires `SUPABASE_SERVICE_ROLE_KEY`, `TEST_USER_EMAIL`, `TEST_USERNAME` env vars and a running dev server)
 
+### Creating test users for manual testing
+
+Email confirmation is enabled on the Supabase project. To create a pre-confirmed test user for sign-in:
+
+```bash
+curl -s -X POST "${NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"YOUR_EMAIL","password":"YOUR_PASSWORD","email_confirm":true}'
+```
+
+Note: Use `SUPABASE_SERVICE_ROLE_KEY` as **both** the `apikey` header and the `Authorization: Bearer` token (it is not a standard JWT in this project's Supabase instance).
+
 ### Gotchas
 
 - No `.env.example` is committed; see `CLAUDE.md` for the required env var list.
 - The app uses Next.js 16 with Turbopack — some APIs differ from Next.js 14/15. Always check `node_modules/next/dist/docs/` for current API docs.
 - `.env.local` is gitignored — each agent session needs it recreated if Supabase secrets are injected as environment variables. The update script handles this automatically when `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present in the environment.
+- The `SUPABASE_SERVICE_ROLE_KEY` in this project uses a non-standard format (`sb_secret_...`) rather than a JWT. Pass it as both `apikey` and `Authorization: Bearer` headers for admin API calls.
